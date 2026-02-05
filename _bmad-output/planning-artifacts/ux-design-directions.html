@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gentle_loop - High-Fidelity Mockups</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Sunset Gradient Palette */
+            --energy-resting: #6B5B7A;
+            --energy-warming: #C4A4A4;
+            --energy-glowing: #E8C47C;
+            
+            /* Supporting Colors */
+            --bg-primary: #FAF8F5;
+            --text-primary: #3D3A38;
+            --surface: #E8E4EC;
+            --surface-dark: #D8D4DC;
+            
+            /* Typography */
+            --font-family: 'Poppins', sans-serif;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-family);
+            background: #0f0f0f;
+            min-height: 100vh;
+            padding: 24px;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #888;
+            text-align: center;
+            margin-bottom: 48px;
+            font-size: 16px;
+        }
+        
+        /* Section Headers */
+        .section-header {
+            max-width: 1400px;
+            margin: 0 auto 24px;
+            padding: 0 24px;
+        }
+        
+        .section-header h2 {
+            color: white;
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .section-header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .section-divider {
+            max-width: 1400px;
+            margin: 64px auto;
+            border-top: 1px solid #333;
+        }
+        
+        .demo-note {
+            background: rgba(232, 196, 124, 0.1);
+            border: 1px solid var(--energy-glowing);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 0 auto 32px;
+            max-width: 600px;
+            text-align: center;
+        }
+        
+        .demo-note h3 {
+            color: var(--energy-glowing);
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        
+        .demo-note p {
+            color: #888;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .mockup-container {
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        
+        .phone-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .phone-label {
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        
+        .phone-description {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 16px;
+            text-align: center;
+            max-width: 280px;
+            line-height: 1.4;
+        }
+        
+        /* Phone Frame */
+        .phone-frame {
+            width: 280px;
+            height: 560px;
+            background: #111;
+            border-radius: 36px;
+            padding: 10px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        
+        .phone-frame.large {
+            width: 320px;
+            height: 640px;
+            padding: 12px;
+            border-radius: 40px;
+        }
+        
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            border-radius: 28px;
+            overflow: hidden;
+            position: relative;
+            background: var(--bg-primary);
+        }
+        
+        .phone-frame.large .phone-screen {
+            border-radius: 32px;
+        }
+        
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 24px;
+            background: #111;
+            border-radius: 0 0 16px 16px;
+            z-index: 10;
+        }
+        
+        .phone-frame.large .phone-notch {
+            width: 120px;
+            height: 28px;
+            border-radius: 0 0 20px 20px;
+        }
+        
+        .phone-home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 2px;
+            z-index: 10;
+        }
+        
+        /* ============================================
+           UNIFIED ANCHOR SCREEN
+           ============================================ */
+        .anchor-unified {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            transition: background-color 0.6s ease;
+        }
+        
+        .anchor-bg {
+            position: absolute;
+            inset: 0;
+            background: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=800&fit=crop') center/cover;
+            z-index: 1;
+        }
+        
+        .anchor-tint {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            transition: background 0.6s ease;
+            pointer-events: none;
+        }
+        
+        .anchor-content {
+            position: relative;
+            z-index: 3;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 60px 24px 24px;
+        }
+        
+        .affirmation-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-right: 40px; /* Space for slider */
+        }
+        
+        .affirmation {
+            font-size: 26px;
+            font-weight: 500;
+            color: var(--text-primary);
+            line-height: 1.4;
+            text-shadow: 0 1px 3px rgba(255,255,255,0.8);
+            animation: breathe 4s ease-in-out infinite;
+        }
+        
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.95; }
+            50% { transform: scale(1.015); opacity: 1; }
+        }
+        
+        .bottom-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            padding-bottom: 20px;
+        }
+        
+        .strategy-button {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 24px;
+            padding: 14px 28px;
+            font-family: var(--font-family);
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .strategy-button:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+        }
+        
+        .calm-text {
+            font-size: 15px;
+            color: var(--text-primary);
+            opacity: 0.8;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.6);
+        }
+        
+        /* Energy Slider */
+        .energy-slider-container {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .slider-track {
+            width: 8px;
+            height: 180px;
+            border-radius: 4px;
+            background: linear-gradient(
+                to bottom,
+                var(--energy-glowing) 0%,
+                var(--energy-warming) 50%,
+                var(--energy-resting) 100%
+            );
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .slider-thumb {
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            cursor: grab;
+            transition: box-shadow 0.2s ease;
+        }
+        
+        .slider-thumb:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        
+        .slider-thumb:active {
+            cursor: grabbing;
+        }
+        
+        .slider-label {
+            font-size: 10px;
+            color: var(--text-primary);
+            opacity: 0.7;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+        }
+        
+        /* Strategy Card Overlay */
+        .strategy-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            display: flex;
+            align-items: flex-end;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        
+        .strategy-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .strategy-card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-height: 70%;
+            overflow-y: auto;
+        }
+        
+        .strategy-validation {
+            font-size: 14px;
+            color: var(--text-primary);
+            opacity: 0.7;
+            margin-bottom: 12px;
+            line-height: 1.5;
+            font-style: italic;
+        }
+        
+        .strategy-name {
+            display: none; /* Removed category labels for softer feel */
+        }
+        
+        .strategy-title {
+            font-size: 20px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 14px;
+        }
+        
+        .strategy-content {
+            font-size: 16px;
+            color: var(--text-primary);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .strategy-source {
+            display: none; /* Removed source citations for softer feel */
+        }
+        
+        .strategy-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .strategy-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: none;
+            font-family: var(--font-family);
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .strategy-btn:hover {
+            transform: scale(1.02);
+        }
+        
+        .strategy-btn-secondary {
+            background: var(--surface);
+            color: var(--text-primary);
+        }
+        
+        .strategy-btn-primary {
+            background: var(--energy-resting);
+            color: white;
+        }
+        
+        /* State indicators */
+        .state-indicator {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 6;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .state-indicator.visible {
+            opacity: 1;
+        }
+        
+        /* Instructions */
+        .instructions {
+            color: #666;
+            font-size: 12px;
+            margin-top: 16px;
+            text-align: center;
+            max-width: 280px;
+        }
+        
+        .instructions strong {
+            color: var(--energy-glowing);
+        }
+        
+        /* ============================================
+           ONBOARDING SCREENS
+           ============================================ */
+        .onboarding-screen {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            padding: 60px 24px 24px;
+        }
+        
+        .onboarding-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .onboarding-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--energy-glowing) 0%, var(--energy-warming) 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin-bottom: 24px;
+        }
+        
+        .onboarding-title {
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        
+        .onboarding-tagline {
+            font-size: 16px;
+            color: var(--text-primary);
+            opacity: 0.7;
+            margin-bottom: 32px;
+        }
+        
+        .onboarding-description {
+            font-size: 15px;
+            color: var(--text-primary);
+            opacity: 0.8;
+            line-height: 1.6;
+            max-width: 280px;
+        }
+        
+        .onboarding-steps {
+            text-align: left;
+            width: 100%;
+            max-width: 260px;
+        }
+        
+        .onboarding-step {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .step-number {
+            width: 24px;
+            height: 24px;
+            background: var(--energy-warming);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .step-text {
+            font-size: 14px;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+        
+        .step-text strong {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+        
+        .step-text span {
+            opacity: 0.7;
+            font-size: 13px;
+        }
+        
+        .onboarding-input-section {
+            width: 100%;
+            max-width: 280px;
+            margin-bottom: 24px;
+        }
+        
+        .onboarding-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid var(--surface);
+            border-radius: 16px;
+            font-size: 16px;
+            font-family: var(--font-family);
+            background: white;
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        
+        .onboarding-input:focus {
+            border-color: var(--energy-warming);
+        }
+        
+        .onboarding-input::placeholder {
+            color: var(--text-primary);
+            opacity: 0.4;
+        }
+        
+        .anchor-choice-grid {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .anchor-choice {
+            width: 120px;
+            height: 120px;
+            border-radius: 16px;
+            border: 3px solid var(--surface);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+            background: white;
+        }
+        
+        .anchor-choice:hover {
+            transform: scale(1.02);
+        }
+        
+        .anchor-choice.selected {
+            border-color: var(--energy-warming);
+        }
+        
+        .anchor-choice-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        
+        .anchor-choice-label {
+            font-size: 12px;
+            color: var(--text-primary);
+            opacity: 0.7;
+        }
+        
+        .anchor-choice .checkmark {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            width: 20px;
+            height: 20px;
+            background: var(--energy-warming);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+        
+        .onboarding-helper {
+            font-size: 13px;
+            color: var(--text-primary);
+            opacity: 0.5;
+            margin-bottom: 16px;
+        }
+        
+        .skip-link {
+            font-size: 14px;
+            color: var(--text-primary);
+            opacity: 0.6;
+            text-decoration: underline;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        
+        .onboarding-footer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .onboarding-btn {
+            width: 100%;
+            max-width: 280px;
+            padding: 16px 32px;
+            background: var(--energy-warming);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 28px;
+            font-size: 16px;
+            font-weight: 500;
+            font-family: var(--font-family);
+            cursor: pointer;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+        
+        .onboarding-btn:hover {
+            transform: scale(1.02);
+        }
+        
+        .onboarding-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .progress-dots {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .progress-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--surface);
+        }
+        
+        .progress-dot.active {
+            background: var(--energy-warming);
+        }
+        
+        /* ============================================
+           SETTINGS SCREEN
+           ============================================ */
+        .settings-screen {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .settings-header {
+            padding: 52px 20px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--surface);
+        }
+        
+        .back-arrow {
+            font-size: 20px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+        
+        .settings-title {
+            font-size: 20px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .settings-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+        
+        .settings-section {
+            padding: 16px 20px 8px;
+        }
+        
+        .settings-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-primary);
+            opacity: 0.5;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--surface);
+        }
+        
+        .settings-row:last-child {
+            border-bottom: none;
+        }
+        
+        .settings-row-left {
+            flex: 1;
+        }
+        
+        .settings-row-label {
+            font-size: 15px;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+        
+        .settings-row-value {
+            font-size: 13px;
+            color: var(--text-primary);
+            opacity: 0.5;
+        }
+        
+        .settings-row-arrow {
+            color: var(--text-primary);
+            opacity: 0.3;
+            font-size: 14px;
+        }
+        
+        .toggle-switch {
+            width: 48px;
+            height: 28px;
+            background: var(--surface);
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        .toggle-switch.active {
+            background: var(--energy-warming);
+        }
+        
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.2s ease;
+        }
+        
+        .toggle-switch.active::after {
+            transform: translateX(20px);
+        }
+        
+        /* ============================================
+           VOICE INPUT MODAL
+           ============================================ */
+        .voice-modal {
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        
+        .voice-modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 32px 24px;
+            width: 100%;
+            max-width: 280px;
+            text-align: center;
+        }
+        
+        .voice-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--energy-warming);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 20px;
+            animation: voicePulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes voicePulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(196, 164, 164, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(196, 164, 164, 0); }
+        }
+        
+        .voice-status {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+        
+        .voice-transcript {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px;
+            min-height: 60px;
+            font-size: 14px;
+            color: var(--text-primary);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        
+        .voice-cancel-btn {
+            padding: 12px 32px;
+            background: transparent;
+            border: 2px solid var(--surface);
+            border-radius: 24px;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            cursor: pointer;
+        }
+        
+        /* ============================================
+           CRISIS STATE
+           ============================================ */
+        .crisis-state {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .crisis-bg {
+            position: absolute;
+            inset: 0;
+            background: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=800&fit=crop') center/cover;
+        }
+        
+        .crisis-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(107, 91, 122, 0.3);
+        }
+        
+        .crisis-content {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .crisis-anchor-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 24px;
+            background: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop') center/cover;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: crisisBreathe 4s ease-in-out infinite;
+        }
+        
+        @keyframes crisisBreathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        
+        /* ============================================
+           HEADER ICONS
+           ============================================ */
+        .screen-header {
+            position: absolute;
+            top: 36px;
+            left: 16px;
+            right: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 5;
+        }
+        
+        .header-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--text-primary);
+            opacity: 0.7;
+            cursor: pointer;
+        }
+        
+        .header-icons-right {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .mic-icon {
+            background: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            color: var(--energy-warming);
+        }
+        
+        /* Strategy List Section */
+        .strategy-section {
+            max-width: 800px;
+            margin: 48px auto;
+            padding: 0 24px;
+        }
+        
+        .strategy-section h2 {
+            color: white;
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        
+        .strategy-section .section-subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+        
+        .strategy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+        }
+        
+        .strategy-preview {
+            background: #2a2a2a;
+            border-radius: 16px;
+            padding: 20px;
+            border-left: 4px solid var(--energy-resting);
+        }
+        
+        .strategy-preview.warming {
+            border-left-color: var(--energy-warming);
+        }
+        
+        .strategy-preview.glowing {
+            border-left-color: var(--energy-glowing);
+        }
+        
+        .strategy-preview .preview-category {
+            display: none; /* Removed for softer feel */
+        }
+        
+        .strategy-preview .preview-title {
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+        
+        .strategy-preview .preview-content {
+            color: #999;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .strategy-preview .preview-source {
+            display: none; /* Removed for softer feel */
+        }
+    </style>
+</head>
+<body>
+    <h1>gentle_loop</h1>
+    <p class="subtitle">High-Fidelity Screen Mockups — Softer Language Update</p>
+    
+    <!-- ============================================
+         SECTION 1: ONBOARDING FLOW
+         ============================================ -->
+    <div class="section-header">
+        <h2>Onboarding Flow</h2>
+        <p>4-step setup leading directly to the Anchor Screen. Target: under 60 seconds.</p>
+    </div>
+    
+    <div class="mockup-container">
+        <!-- Onboarding 1: Welcome -->
+        <div class="phone-wrapper">
+            <div class="phone-label">1. Welcome</div>
+            <div class="phone-description">Value proposition and emotional tone setting</div>
+            <div class="phone-frame">
+                <div class="phone-notch"></div>
+                <div class="phone-screen">
+                    <div class="onboarding-screen">
+                        <div class="onboarding-content">
+                            <div class="onboarding-icon">🌅</div>
+                            <h1 class="onboarding-title">gentle_loop</h1>
+                            <p class="onboarding-tagline">A moment of calm when you need it most.</p>
+                            <p class="onboarding-description">
+                                This app is your personal reset button. Open it when caregiving gets heavy. 
+                                We'll help you pause, breathe, and find your next step.
+                            </p>
+                        </div>
+                        <div class="onboarding-footer">
+                            <button class="onboarding-btn">Get Started</button>
+                            <div class="progress-dots">
+                                <div class="progress-dot active"></div>
+                                <div class="progress-dot"></div>
+                                <div class="progress-dot"></div>
+                                <div class="progress-dot"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="phone-home-indicator"></div>
+            </div>
+        </div>
+        
+        <!-- Onboarding 2: How It Works -->
+        <div class="phone-wrapper">
+            <div class="phone-label">2. How It Works</div>
+            <div class="phone-description">Quick visual guide to the core loop</div>
+            <div class="phone-frame">
+                <div class="phone-notch"></div>
+                <div class="phone-screen">
+                    <div class="onboarding-screen">
+                        <div class="onboarding-content">
+                            <h1 class="onboarding-title" style="margin-bottom: 24px;">How it works</h1>
+                            <div class="onboarding-steps">
+                                <div class="onboarding-step">
+                                    <div class="step-number">1</div>
+                                    <div class="step-text">
+                                        <strong>Open the app</strong>
+                                        <span>See your anchor image. Take a breath.</span>
+                                    </div>
+                                </div>
+                                <div class="onboarding-step">
+                                    <div class="step-number">2</div>
+                                    <div class="step-text">
+                                        <strong>Check your energy</strong>
+                                        <span>Slide to show how you're feeling. No judgment.</span>
+                                    </div>
+                                </div>
+                                <div class="onboarding-step">
+                                    <div class="step-number">3</div>
+                                    <div class="step-text">
+                                        <strong>Get some ideas</strong>
+                                        <span>Tap for a helpful thought matched to how you're feeling.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="onboarding-footer">
+                            <button class="onboarding-btn">Continue</button>
+                            <div class="progress-dots">
+                                <div class="progress-dot active"></div>
+                                <div class="progress-dot active"></div>
+                                <div class="progress-dot"></div>
+                                <div class="progress-dot"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="phone-home-indicator"></div>
+            </div>
+        </div>
+        
+        <!-- Onboarding 3: Your Name -->
+        <div class="phone-wrapper">
+            <div class="phone-label">3. Your Name</div>
+            <div class="phone-description">Simple personalization</div>
+            <div class="phone-frame">
+                <div class="phone-notch"></div>
+                <div class="phone-screen">
+                    <div class="onboarding-screen">
+                        <div class="onboarding-content">
+                            <h1 class="onboarding-title">What should we call you?</h1>
+                            <p class="onboarding-tagline">This helps us personalize your experience.</p>
+                            <div class="onboarding-input-section">
+                                <input type="text" class="onboarding-input" placeholder="Your first name" value="Sarah">
+                            </div>
+                        </div>
+                        <div class="onboarding-footer">
+                            <button class="onboarding-btn">Continue</button>
+                            <div class="progress-dots">
+                                <div class="progress-dot active"></div>
+                                <div class="progress-dot active"></div>
+                                <div class="progress-dot active"></div>
+                                <div class="progress-dot"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="phone-home-indicator"></div>
+            </div>
+        </div>
+        
+        <!-- Onboarding 4: Your Anchor -->
+        <div class="phone-wrapper">
+            <div class="phone-label">4. Your Anchor</div>
+            <div class="phone-description">Optional customization with skip option</div>
+            <div class="phone-frame">
+                <div class="phone-notch"></div>
+                <div class="phone-screen">
+                    <div class="onboarding-screen">
+                        <div class="onboarding-content">
+                            <h1 class="onboarding-title">Choose your anchor</h1>
+                            <p class="onboarding-tagline">This image greets you every time you open the app.</p>
+                            <div class="anchor-choice-grid">
+                                <div class="anchor-choice selected" style="position: relative;">
+                                    <div class="anchor-choice-icon">🏔️</div>
+                                    <div class="anchor-choice-label">Default</div>
+                                    <div class="checkmark">✓</div>
+                                </div>
+                                <div class="anchor-choice">
+                                    <div class="anchor-choice-icon">📷</div>
+                                    <div class="anchor-choice-label">Upload Photo</div>
+                                </div>
+                            </div>
+                            <p class="onboarding-helper">You can change this anytime in Settings.</p>
+                        </div>
+                        <div class="onboarding-footer">
+                            <button class="onboarding-btn">Start Using</button>
+                            <div class="skip-link">Skip for now</div>
+                            <div class="progress-dots">
+                                <div class="progress-dot active"></div>
+                                <div class="progress-dot active"></div>
+                                <div class="progress-dot active"></div>
+                                <div class="progress-dot active"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="phone-home-indicator"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section-divider"></div>
+    
+    <!-- ============================================
+         SECTION 2: ANCHOR SCREEN (INTERACTIVE)
+         ============================================ -->
+    <div class="section-header">
+        <h2>Anchor Screen</h2>
+        <p>The emotional home of the app. Designed for immediate calm and zero-friction interaction.</p>
+    </div>
+    
+    <div class="demo-note">
+        <h3>Interactive Demo</h3>
+        <p>Drag the energy slider to change your state. Tap "I could use some ideas" to receive 
+        a helpful thought tailored to your current capacity.</p>
+    </div>
+    
+    <div class="mockup-container">
+        <!-- Interactive Mockup -->
+        <div class="phone-wrapper">
+            <div class="phone-label">Anchor Screen (Interactive)</div>
+            <div class="phone-description">Try dragging the slider and tapping "I could use some ideas"</div>
+            <div class="phone-frame large">
+                <div class="phone-notch"></div>
+                <div class="phone-screen">
+                    <div class="anchor-unified" id="anchor-screen">
+                        <div class="anchor-bg"></div>
+                        <div class="anchor-tint" id="anchor-tint"></div>
+                        
+                        <!-- Header Icons -->
+                        <div class="screen-header">
+                            <div class="header-icon">☰</div>
+                            <div class="header-icons-right">
+                                <div class="header-icon">⚙️</div>
+                                <div class="header-icon mic-icon">🎤</div>
+                            </div>
+                        </div>
+                        
+                        <div class="state-indicator" id="state-indicator">Resting</div>
+                        
+                        <div class="anchor-content">
+                            <div class="affirmation-area">
+                                <div class="affirmation" id="affirmation">
+                                    You're doing something hard.<br>
+                                    That's worth acknowledging.
+                                </div>
+                            </div>
+                            
+                            <div class="bottom-area">
+                                <button class="strategy-button" id="strategy-btn">I could use some ideas</button>
+                                <div class="calm-text" id="calm-text">Take a breath</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Energy Slider -->
+                        <div class="energy-slider-container">
+                            <span class="slider-label">energy</span>
+                            <div class="slider-track" id="slider-track">
+                                <div class="slider-thumb" id="slider-thumb" style="top: 75%;"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Strategy Overlay -->
+                        <div class="strategy-overlay" id="strategy-overlay">
+                            <div class="strategy-card">
+                                <p class="strategy-validation" id="strategy-validation">Running on empty is exhausting. You're still showing up.</p>
+                                <p class="strategy-name" id="strategy-name">Grounding Technique</p>
+                                <h3 class="strategy-title" id="strategy-title">5-4-3-2-1 Grounding</h3>
+                                <p class="strategy-content" id="strategy-content">Feel your feet on the floor. Name 5 things you can see. 4 you can touch. 3 you can hear. This activates your parasympathetic nervous system.</p>
+                                <p class="strategy-source" id="strategy-source">Source: Mindfulness-based stress reduction protocols</p>
+                                <div class="strategy-actions">
+                                    <button class="strategy-btn strategy-btn-secondary" id="another-btn">Something else</button>
+                                    <button class="strategy-btn strategy-btn-primary" id="done-btn">That helps</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="instructions">
+                <strong>Drag the slider</strong> to change energy level.<br>
+                Ideas adapt to how you're feeling.
+            </p>
+        </div>
+        
+        <!-- Crisis State -->
+        <div class="phone-wrapper">
+            <div class="phone-label">Crisis Detection State</div>
+            <div class="phone-description">Auto-simplifies after 5s of no interaction. Just the anchor and breathing pulse.</div>
+            <div class="phone-frame large">
+                <div class="phone-notch"></div>
+                <div class="phone-screen">
+                    <div class="crisis-state">
+                        <div class="crisis-bg"></div>
+                        <div class="crisis-overlay"></div>
+                        <div class="crisis-content">
+                            <div class="crisis-anchor-image"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="phone-home-indicator"></div>
+            </div>
+            <p class="instructions">
+                No prompts. No pressure.<br>
+                <strong>Any tap</strong> brings the full UI back.
+            </p>
+        </div>
+    </div>
+    
+    <div class="section-divider"></div>
+    
+    <!-- ============================================
+         SECTION 3: SETTINGS & VOICE
+         ============================================ -->
+    <div class="section-header">
+        <h2>Settings & Voice Input</h2>
+        <p>Customization and accessibility options. Always-available voice as an escape hatch.</p>
+    </div>
+    
+    <div class="mockup-container">
+        <!-- Settings Screen -->
+        <div class="phone-wrapper">
+            <div class="phone-label">Settings</div>
+            <div class="phone-description">Personalization, accessibility toggles, and app info</div>
+            <div class="phone-frame">
+                <div class="phone-notch"></div>
+                <div class="phone-screen">
+                    <div class="settings-screen">
+                        <div class="settings-header">
+                            <span class="back-arrow">←</span>
+                            <span class="settings-title">Settings</span>
+                        </div>
+                        <div class="settings-content">
+                            <div class="settings-section">
+                                <div class="settings-section-title">Personalization</div>
+                                <div class="settings-row">
+                                    <div class="settings-row-left">
+                                        <div class="settings-row-label">Your Name</div>
+                                        <div class="settings-row-value">Sarah</div>
+                                    </div>
+                                    <span class="settings-row-arrow">→</span>
+                                </div>
+                                <div class="settings-row">
+                                    <div class="settings-row-left">
+                                        <div class="settings-row-label">Anchor Image</div>
+                                        <div class="settings-row-value">Custom photo</div>
+                                    </div>
+                                    <span class="settings-row-arrow">→</span>
+                                </div>
+                                <div class="settings-row">
+                                    <div class="settings-row-left">
+                                        <div class="settings-row-label">Anchor Video</div>
+                                        <div class="settings-row-value">Not set</div>
+                                    </div>
+                                    <span class="settings-row-arrow">→</span>
+                                </div>
+                            </div>
+                            <div class="settings-section">
+                                <div class="settings-section-title">Accessibility</div>
+                                <div class="settings-row">
+                                    <div class="settings-row-left">
+                                        <div class="settings-row-label">Reduce Motion</div>
+                                        <div class="settings-row-value">Disables animations</div>
+                                    </div>
+                                    <div class="toggle-switch"></div>
+                                </div>
+                                <div class="settings-row">
+                                    <div class="settings-row-left">
+                                        <div class="settings-row-label">Larger Text</div>
+                                        <div class="settings-row-value">Increases font sizes</div>
+                                    </div>
+                                    <div class="toggle-switch"></div>
+                                </div>
+                                <div class="settings-row">
+                                    <div class="settings-row-left">
+                                        <div class="settings-row-label">High Contrast</div>
+                                        <div class="settings-row-value">Improves visibility</div>
+                                    </div>
+                                    <div class="toggle-switch active"></div>
+                                </div>
+                            </div>
+                            <div class="settings-section">
+                                <div class="settings-section-title">About</div>
+                                <div class="settings-row">
+                                    <div class="settings-row-left">
+                                        <div class="settings-row-label">Version</div>
+                                    </div>
+                                    <span class="settings-row-value">1.0.0</span>
+                                </div>
+                                <div class="settings-row">
+                                    <div class="settings-row-left">
+                                        <div class="settings-row-label">Privacy Policy</div>
+                                    </div>
+                                    <span class="settings-row-arrow">→</span>
+                                </div>
+                                <div class="settings-row">
+                                    <div class="settings-row-left">
+                                        <div class="settings-row-label">Send Feedback</div>
+                                    </div>
+                                    <span class="settings-row-arrow">→</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="phone-home-indicator"></div>
+            </div>
+        </div>
+        
+        <!-- Voice Input Modal -->
+        <div class="phone-wrapper">
+            <div class="phone-label">Voice Input</div>
+            <div class="phone-description">Always-available. Auto-submits after 2s of silence.</div>
+            <div class="phone-frame">
+                <div class="phone-notch"></div>
+                <div class="phone-screen">
+                    <div class="voice-modal">
+                        <div class="voice-modal-content">
+                            <div class="voice-icon">🎤</div>
+                            <div class="voice-status">Listening...</div>
+                            <div class="voice-transcript">
+                                "She keeps asking the same question over and over..."
+                            </div>
+                            <button class="voice-cancel-btn">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="phone-home-indicator"></div>
+            </div>
+            <p class="instructions">
+                Voice context influences strategy selection.<br>
+                No typing required during crisis.
+            </p>
+        </div>
+        
+        <!-- Energy States Preview -->
+        <div class="phone-wrapper">
+            <div class="phone-label">Energy States</div>
+            <div class="phone-description">All three states feel equally valid. No state is "bad."</div>
+            <div class="phone-frame">
+                <div class="phone-notch"></div>
+                <div class="phone-screen">
+                    <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
+                        <div style="flex: 1; background: linear-gradient(180deg, rgba(232, 196, 124, 0.4) 0%, rgba(232, 196, 124, 0.6) 100%); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px;">
+                            <span style="font-size: 24px;">☀️</span>
+                            <span style="font-size: 14px; font-weight: 500; color: var(--text-primary);">Glowing</span>
+                            <span style="font-size: 11px; color: var(--text-primary); opacity: 0.7;">Some capacity</span>
+                        </div>
+                        <div style="flex: 1; background: linear-gradient(180deg, rgba(196, 164, 164, 0.4) 0%, rgba(196, 164, 164, 0.6) 100%); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px;">
+                            <span style="font-size: 24px;">🌤️</span>
+                            <span style="font-size: 14px; font-weight: 500; color: var(--text-primary);">Warming</span>
+                            <span style="font-size: 11px; color: var(--text-primary); opacity: 0.7;">Holding steady</span>
+                        </div>
+                        <div style="flex: 1; background: linear-gradient(180deg, rgba(107, 91, 122, 0.4) 0%, rgba(107, 91, 122, 0.6) 100%); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px;">
+                            <span style="font-size: 24px;">🌙</span>
+                            <span style="font-size: 14px; font-weight: 500; color: white);">Resting</span>
+                            <span style="font-size: 11px; color: white; opacity: 0.8;">Running on empty</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="phone-home-indicator"></div>
+            </div>
+            <p class="instructions">
+                <strong>Sunset gradient:</strong> Amber → Rose → Purple<br>
+                Each state has matching ideas.
+            </p>
+        </div>
+    </div>
+    
+    <div class="section-divider"></div>
+    
+    <!-- ============================================
+         SECTION 4: STRATEGY DATABASE
+         ============================================ -->
+    <!-- Ideas Database Preview -->
+    <div class="section-header">
+        <h2>Ideas Library</h2>
+        <p>Helpful thoughts and gentle nudges, matched to how you're feeling.</p>
+    </div>
+    
+    <div class="strategy-section">
+        
+        <h3 style="color: var(--energy-resting); margin: 24px 0 16px; font-size: 16px;">When you're running on empty</h3>
+        <p style="color: #666; font-size: 13px; margin-bottom: 16px;">Ideas for settling and giving yourself permission</p>
+        <div class="strategy-grid">
+            <div class="strategy-preview resting">
+                <p class="preview-title">Feel your feet on the floor</p>
+                <p class="preview-content">Name 5 things you can see. 4 you can touch. 3 you can hear. This tells your body it's safe.</p>
+            </div>
+            <div class="strategy-preview resting">
+                <p class="preview-title">Say it out loud</p>
+                <p class="preview-content">"I'm doing the best I can. I can't control everything." Your brain believes what it hears you say.</p>
+            </div>
+            <div class="strategy-preview resting">
+                <p class="preview-title">Try this breath</p>
+                <p class="preview-content">In for 4. Out for 6. The longer exhale tells your body it's safe. Do it three times.</p>
+            </div>
+            <div class="strategy-preview resting">
+                <p class="preview-title">Find a familiar scent</p>
+                <p class="preview-content">Coffee, a lotion you love, fresh air. Something that brings you back to yourself.</p>
+            </div>
+        </div>
+        
+        <h3 style="color: var(--energy-warming); margin: 32px 0 16px; font-size: 16px;">When you're holding steady</h3>
+        <p style="color: #666; font-size: 13px; margin-bottom: 16px;">Ideas for the moment you're in</p>
+        <div class="strategy-grid">
+            <div class="strategy-preview warming">
+                <p class="preview-title">Feelings before fixing</p>
+                <p class="preview-content">Try "I can see you're upset" before solving anything. Validation opens doors.</p>
+            </div>
+            <div class="strategy-preview warming">
+                <p class="preview-title">Change the scene</p>
+                <p class="preview-content">If they're stuck in a loop, move somewhere else. "Let's go look out the window." Movement breaks thought patterns.</p>
+            </div>
+            <div class="strategy-preview warming">
+                <p class="preview-title">Show instead of tell</p>
+                <p class="preview-content">Hold up the mug instead of saying "coffee." Point to the chair. Visuals often land when words don't.</p>
+            </div>
+            <div class="strategy-preview warming">
+                <p class="preview-title">Check the basics</p>
+                <p class="preview-content">Hungry? Thirsty? In pain? Need bathroom? Too hot or cold? Behavior is often trying to tell you something.</p>
+            </div>
+            <div class="strategy-preview warming">
+                <p class="preview-title">Lower and slower</p>
+                <p class="preview-content">Speak slower and lower. Even well-meaning loud voices can increase stress. A calm tone signals safety.</p>
+            </div>
+            <div class="strategy-preview warming">
+                <p class="preview-title">One question at a time</p>
+                <p class="preview-content">"Are you cold?" works. "Do you want a sweater or blanket or should I turn up the heat?" overwhelms.</p>
+            </div>
+        </div>
+        
+        <h3 style="color: var(--energy-glowing); margin: 32px 0 16px; font-size: 16px;">When you've got some capacity</h3>
+        <p style="color: #666; font-size: 13px; margin-bottom: 16px;">Ideas for setting yourself up</p>
+        <div class="strategy-grid">
+            <div class="strategy-preview glowing">
+                <p class="preview-title">Set up the space</p>
+                <p class="preview-content">Good moment to reduce clutter, label things with words AND pictures. A calmer space means fewer hard moments.</p>
+            </div>
+            <div class="strategy-preview glowing">
+                <p class="preview-title">Same time, same way</p>
+                <p class="preview-content">Routines reduce anxiety. Write down what works and repeat it. The brain relaxes when it can predict what's coming.</p>
+            </div>
+            <div class="strategy-preview glowing">
+                <p class="preview-title">Note what's working</p>
+                <p class="preview-content">What music helped? What phrase landed? What triggered the hard moment? Future you will thank present you.</p>
+            </div>
+            <div class="strategy-preview glowing">
+                <p class="preview-title">When did you last ask for help?</p>
+                <p class="preview-content">Even 2 hours away helps you show up better. Who could you reach out to today?</p>
+            </div>
+            <div class="strategy-preview glowing">
+                <p class="preview-title">Try a photo or song</p>
+                <p class="preview-content">Familiar music can shift the mood even when words don't land. The feeling remains when the memory doesn't.</p>
+            </div>
+            <div class="strategy-preview glowing">
+                <p class="preview-title">Set up tomorrow tonight</p>
+                <p class="preview-content">Lay out clothes. Prep breakfast. Small things now mean fewer decisions when you're tired.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Interactive slider
+        const sliderTrack = document.getElementById('slider-track');
+        const sliderThumb = document.getElementById('slider-thumb');
+        const anchorTint = document.getElementById('anchor-tint');
+        const stateIndicator = document.getElementById('state-indicator');
+        const strategyBtn = document.getElementById('strategy-btn');
+        const strategyOverlay = document.getElementById('strategy-overlay');
+        const doneBtn = document.getElementById('done-btn');
+        const anotherBtn = document.getElementById('another-btn');
+        const strategyValidation = document.getElementById('strategy-validation');
+        const strategyName = document.getElementById('strategy-name');
+        const strategyTitle = document.getElementById('strategy-title');
+        const strategyContent = document.getElementById('strategy-content');
+        const strategySource = document.getElementById('strategy-source');
+        const affirmation = document.getElementById('affirmation');
+        const calmText = document.getElementById('calm-text');
+        
+        let isDragging = false;
+        let currentEnergy = 0.75; // 0 = top (glowing), 1 = bottom (resting)
+        
+        const ideas = {
+            resting: [
+                {
+                    validation: "Running on empty is exhausting. You're still showing up — that matters.",
+                    title: "Feel your feet on the floor",
+                    content: "Name 5 things you can see. 4 you can touch. 3 you can hear. This tells your body it's safe. It's not just 'calming down' — it's biology."
+                },
+                {
+                    validation: "Low energy days are part of this. You're allowed to rest.",
+                    title: "Say it out loud",
+                    content: "'I'm doing the best I can. I can't control everything.' Your brain believes what it hears you say."
+                },
+                {
+                    validation: "Your body is carrying stress. Let's help it release.",
+                    title: "Try this breath",
+                    content: "In for 4. Out for 6. The longer exhale tells your body it's safe. Do it three times."
+                },
+                {
+                    validation: "You don't have to fix this moment. Just be present in it.",
+                    title: "Find a familiar scent",
+                    content: "Coffee, a lotion you love, fresh air. Something that brings you back to yourself, even for a moment."
+                }
+            ],
+            warming: [
+                {
+                    validation: "You're holding steady. That takes real strength.",
+                    title: "Feelings before fixing",
+                    content: "Try 'I can see you're upset' before solving anything. Validation opens doors. Correction closes them."
+                },
+                {
+                    validation: "Loops happen. You have more options than you think.",
+                    title: "Change the scene",
+                    content: "If they're stuck in a loop, move somewhere else. 'Let's go look out the window.' Movement breaks thought patterns."
+                },
+                {
+                    validation: "Words can be hard for both of you right now.",
+                    title: "Show instead of tell",
+                    content: "Hold up the mug instead of saying 'coffee.' Point to the chair. Visuals often land when words don't."
+                },
+                {
+                    validation: "Sudden changes usually have a reason.",
+                    title: "Check the basics",
+                    content: "Hungry? Thirsty? In pain? Need bathroom? Too hot or cold? Behavior is often trying to tell you something."
+                },
+                {
+                    validation: "Small adjustments can shift everything.",
+                    title: "Lower and slower",
+                    content: "Speak slower and lower. Even well-meaning loud voices can increase stress. A calm, low tone signals safety."
+                },
+                {
+                    validation: "Simplicity is a gift you can give right now.",
+                    title: "One question at a time",
+                    content: "'Are you cold?' works. 'Do you want a sweater or blanket or should I turn up the heat?' overwhelms."
+                }
+            ],
+            glowing: [
+                {
+                    validation: "You've got some capacity right now. That's a gift.",
+                    title: "Set up the space",
+                    content: "Good moment to reduce clutter, label things with words AND pictures, remove confusing mirrors. A calmer space means fewer hard moments."
+                },
+                {
+                    validation: "Predictability is one of the most powerful things you can offer.",
+                    title: "Same time, same way",
+                    content: "Routines reduce anxiety. Write down what works and repeat it. The brain relaxes when it can predict what's coming."
+                },
+                {
+                    validation: "What you're learning is valuable. Capture it.",
+                    title: "Note what's working",
+                    content: "What music helped? What phrase landed? What triggered the hard moment? Future you will thank present you."
+                },
+                {
+                    validation: "Sustainability requires support. This isn't optional.",
+                    title: "When did you last ask for help?",
+                    content: "Even 2 hours away helps you show up better. Who could you reach out to today?"
+                },
+                {
+                    validation: "Connection doesn't require words.",
+                    title: "Try a photo or song",
+                    content: "Familiar music can shift the mood even when words don't land. The feeling remains when the memory doesn't."
+                },
+                {
+                    validation: "Small preparations have outsized impact.",
+                    title: "Set up tomorrow tonight",
+                    content: "Lay out clothes. Prep breakfast. Small things now mean fewer decisions when you're tired."
+                }
+            ]
+        };
+        
+        const affirmations = {
+            resting: [
+                "Low energy days<br>are part of this.",
+                "You're doing<br>the best you can.",
+                "Rest is not<br>giving up."
+            ],
+            warming: [
+                "You're doing something hard.<br>That's worth acknowledging.",
+                "You're still here.<br>That matters.",
+                "One moment<br>at a time."
+            ],
+            glowing: [
+                "You've got some<br>capacity today.<br>Use it wisely.",
+                "Good energy is<br>a gift. Receive it.",
+                "Today has<br>possibilities."
+            ]
+        };
+        
+        const calmTexts = [
+            "Take a breath",
+            "Exhale longer than you inhale",
+            "It's okay to pause",
+            "You are here now",
+            "This moment is enough"
+        ];
+        
+        function getState(energy) {
+            if (energy < 0.33) return 'glowing';
+            if (energy < 0.66) return 'warming';
+            return 'resting';
+        }
+        
+        function updateTint(energy) {
+            const resting = { r: 107, g: 91, b: 122 };
+            const warming = { r: 196, g: 164, b: 164 };
+            const glowing = { r: 232, g: 196, b: 124 };
+            
+            let color;
+            if (energy < 0.5) {
+                const t = energy * 2;
+                color = {
+                    r: Math.round(glowing.r + (warming.r - glowing.r) * t),
+                    g: Math.round(glowing.g + (warming.g - glowing.g) * t),
+                    b: Math.round(glowing.b + (warming.b - glowing.b) * t)
+                };
+            } else {
+                const t = (energy - 0.5) * 2;
+                color = {
+                    r: Math.round(warming.r + (resting.r - warming.r) * t),
+                    g: Math.round(warming.g + (resting.g - warming.g) * t),
+                    b: Math.round(warming.b + (resting.b - warming.b) * t)
+                };
+            }
+            
+            anchorTint.style.background = `linear-gradient(180deg, rgba(${color.r}, ${color.g}, ${color.b}, 0.3) 0%, rgba(${color.r}, ${color.g}, ${color.b}, 0.5) 100%)`;
+            
+            const state = getState(energy);
+            const stateNames = { resting: 'Resting', warming: 'Warming', glowing: 'Glowing' };
+            stateIndicator.textContent = stateNames[state];
+            
+            // Update primary button color
+            const primaryBtn = document.getElementById('done-btn');
+            if (primaryBtn) {
+                primaryBtn.style.background = `rgb(${color.r}, ${color.g}, ${color.b})`;
+                if (state === 'glowing' || state === 'warming') {
+                    primaryBtn.style.color = '#3D3A38';
+                } else {
+                    primaryBtn.style.color = 'white';
+                }
+            }
+            
+            // Update strategy name color
+            const nameEl = document.getElementById('strategy-name');
+            if (nameEl) {
+                nameEl.style.color = `rgb(${color.r}, ${color.g}, ${color.b})`;
+            }
+        }
+        
+        function updateSlider(clientY) {
+            const rect = sliderTrack.getBoundingClientRect();
+            let percentage = (clientY - rect.top) / rect.height;
+            percentage = Math.max(0, Math.min(1, percentage));
+            
+            sliderThumb.style.top = `${percentage * 100}%`;
+            currentEnergy = percentage;
+            updateTint(percentage);
+            
+            stateIndicator.classList.add('visible');
+            clearTimeout(window.stateTimeout);
+            window.stateTimeout = setTimeout(() => {
+                stateIndicator.classList.remove('visible');
+            }, 1500);
+        }
+        
+        sliderTrack.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            updateSlider(e.clientY);
+        });
+        
+        sliderThumb.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                updateSlider(e.clientY);
+            }
+        });
+        
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+        
+        // Touch support
+        sliderTrack.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            updateSlider(e.touches[0].clientY);
+        });
+        
+        sliderThumb.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            e.preventDefault();
+        });
+        
+        document.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                updateSlider(e.touches[0].clientY);
+            }
+        });
+        
+        document.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+        
+        // Ideas button
+        function showIdea() {
+            const state = getState(currentEnergy);
+            const stateIdeas = ideas[state];
+            const idea = stateIdeas[Math.floor(Math.random() * stateIdeas.length)];
+            
+            strategyValidation.textContent = idea.validation;
+            strategyTitle.textContent = idea.title;
+            strategyContent.textContent = idea.content;
+            
+            strategyOverlay.classList.add('visible');
+        }
+        
+        strategyBtn.addEventListener('click', showIdea);
+        
+        doneBtn.addEventListener('click', () => {
+            strategyOverlay.classList.remove('visible');
+        });
+        
+        anotherBtn.addEventListener('click', showIdea);
+        
+        // Initialize
+        updateTint(0.75);
+        
+        // Rotate calm text
+        let calmIndex = 0;
+        setInterval(() => {
+            calmIndex = (calmIndex + 1) % calmTexts.length;
+            calmText.style.opacity = 0;
+            setTimeout(() => {
+                calmText.textContent = calmTexts[calmIndex];
+                calmText.style.opacity = 0.8;
+            }, 300);
+        }, 8000);
+        
+        calmText.style.transition = 'opacity 0.3s ease';
+    </script>
+</body>
+</html>
