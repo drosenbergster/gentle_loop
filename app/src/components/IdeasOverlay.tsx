@@ -6,15 +6,13 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Pressable, Dimensions, Modal } from 'react-native';
+import { View, StyleSheet, Pressable, Dimensions, Modal, Platform } from 'react-native';
 import { Text } from 'react-native-paper';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
   withSpring,
-  Easing,
-  runOnJS,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
@@ -23,6 +21,22 @@ import { useEnergyState, useSettingsStore } from '../stores';
 import { getRandomIdea, getNextIdea, Idea } from '../data';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// Web-compatible shadow helper
+const createShadow = (offsetY: number, radius: number, opacity: number) => {
+  if (Platform.OS === 'web') {
+    return {
+      boxShadow: `0px ${offsetY}px ${radius}px rgba(0, 0, 0, ${opacity})`,
+    };
+  }
+  return {
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: offsetY },
+    shadowOpacity: opacity,
+    shadowRadius: radius,
+    elevation: Math.round(Math.abs(offsetY) / 2),
+  };
+};
 
 interface IdeasOverlayProps {
   visible: boolean;
@@ -58,8 +72,17 @@ export function IdeasOverlay({ visible, onClose }: IdeasOverlayProps) {
     }
   }, [visible, energyState, reduceMotion]);
 
+  const triggerHaptic = useCallback((style: 'light' | 'medium') => {
+    if (Platform.OS !== 'web') {
+      const feedbackStyle = style === 'light' 
+        ? Haptics.ImpactFeedbackStyle.Light 
+        : Haptics.ImpactFeedbackStyle.Medium;
+      Haptics.impactAsync(feedbackStyle);
+    }
+  }, []);
+
   const handleSomethingElse = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    triggerHaptic('light');
     
     // Get a different idea
     const nextIdea = getNextIdea(energyState, currentIdea?.id);
@@ -72,12 +95,12 @@ export function IdeasOverlay({ visible, onClose }: IdeasOverlayProps) {
         cardTranslateY.value = withSpring(0, { damping: 15, stiffness: 100 });
       }, 100);
     }
-  }, [energyState, currentIdea, reduceMotion]);
+  }, [energyState, currentIdea, reduceMotion, triggerHaptic]);
 
   const handleThatHelps = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    triggerHaptic('medium');
     onClose();
-  }, [onClose]);
+  }, [onClose, triggerHaptic]);
 
   const handleBackdropPress = useCallback(() => {
     onClose();
@@ -103,7 +126,12 @@ export function IdeasOverlay({ visible, onClose }: IdeasOverlayProps) {
       <View style={styles.container}>
         {/* Backdrop */}
         <Animated.View style={[styles.backdrop, overlayStyle]}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={handleBackdropPress} />
+          <Pressable 
+            style={StyleSheet.absoluteFill} 
+            onPress={handleBackdropPress}
+            accessibilityRole="button"
+            accessibilityLabel="Close ideas"
+          />
         </Animated.View>
 
         {/* Card */}
@@ -125,6 +153,8 @@ export function IdeasOverlay({ visible, onClose }: IdeasOverlayProps) {
                 pressed && styles.buttonPressed,
               ]}
               onPress={handleSomethingElse}
+              accessibilityRole="button"
+              accessibilityLabel="Something else"
             >
               <Text style={styles.secondaryButtonText}>Something else</Text>
             </Pressable>
@@ -135,6 +165,8 @@ export function IdeasOverlay({ visible, onClose }: IdeasOverlayProps) {
                 pressed && styles.buttonPressed,
               ]}
               onPress={handleThatHelps}
+              accessibilityRole="button"
+              accessibilityLabel="That helps"
             >
               <Text style={styles.primaryButtonText}>That helps</Text>
             </Pressable>
@@ -160,11 +192,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xxl,
     padding: spacing.xl,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    ...createShadow(-4, 16, 0.15),
   },
   validation: {
     fontFamily: fontFamilies.light,

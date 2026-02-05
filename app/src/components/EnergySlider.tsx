@@ -6,7 +6,7 @@
  */
 
 import { useCallback } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { Text } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -25,6 +25,22 @@ const SLIDER_HEIGHT = 180;
 const SLIDER_WIDTH = 60;
 const THUMB_SIZE = 28;
 
+// Web-compatible shadow helper
+const createShadow = (offsetY: number, radius: number, opacity: number) => {
+  if (Platform.OS === 'web') {
+    return {
+      boxShadow: `0px ${offsetY}px ${radius}px rgba(0, 0, 0, ${opacity})`,
+    };
+  }
+  return {
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: offsetY },
+    shadowOpacity: opacity,
+    shadowRadius: radius,
+    elevation: Math.round(offsetY / 2),
+  };
+};
+
 export function EnergySlider() {
   const energy = useEnergyStore(state => state.energy);
   const setEnergy = useEnergyStore(state => state.setEnergy);
@@ -40,7 +56,10 @@ export function EnergySlider() {
   }, [setEnergy]);
 
   const triggerHaptic = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Haptics only work on native
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
   }, []);
 
   const panGesture = Gesture.Pan()
@@ -140,13 +159,9 @@ const styles = StyleSheet.create({
     height: THUMB_SIZE,
     borderRadius: THUMB_SIZE / 2,
     backgroundColor: colors.white,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
     justifyContent: 'center',
     alignItems: 'center',
+    ...createShadow(2, 4, 0.25),
   },
   thumbInner: {
     width: THUMB_SIZE - 8,

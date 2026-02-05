@@ -5,10 +5,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Dimensions, Pressable } from 'react-native';
+import { View, StyleSheet, Dimensions, Pressable, Platform, Image } from 'react-native';
 import { Text } from 'react-native-paper';
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -21,17 +19,33 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EnergySlider } from '../src/components/EnergySlider';
 import { IdeasOverlay } from '../src/components/IdeasOverlay';
-import { colors, spacing, textStyles, fontFamilies } from '../src/theme';
-import { useEnergyStore, useEnergyState, useSettingsStore } from '../src/stores';
+import { colors, spacing, fontFamilies } from '../src/theme';
+import { useEnergyState, useSettingsStore } from '../src/stores';
 import { getRandomAffirmation, calmPrompts } from '../src/data';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // Default images (bundled with app)
 const defaultImages: Record<string, any> = {
   'default-mountains': require('../assets/images/mountains.jpg'),
   'default-water': require('../assets/images/water.jpg'),
   'default-sunset': require('../assets/images/sunset.jpg'),
+};
+
+// Web-compatible shadow helper
+const createShadow = (offsetY: number, radius: number, opacity: number): any => {
+  if (Platform.OS === 'web') {
+    return {
+      boxShadow: `0px ${offsetY}px ${radius}px rgba(0, 0, 0, ${opacity})`,
+    };
+  }
+  return {
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: offsetY },
+    shadowOpacity: opacity,
+    shadowRadius: radius,
+    elevation: Math.round(offsetY / 2),
+  };
 };
 
 export default function AnchorScreen() {
@@ -107,14 +121,13 @@ export default function AnchorScreen() {
         <Image
           source={imageSource}
           style={styles.anchorImage}
-          contentFit="cover"
-          transition={500}
+          resizeMode="cover"
         />
       </Animated.View>
 
       {/* Content Overlay */}
       <View style={[styles.contentOverlay, { paddingTop: insets.top + spacing.lg }]}>
-        {/* Calm Prompt */}
+        {/* Calm Prompt - positioned below the image */}
         <View style={styles.calmPromptContainer}>
           <Text style={styles.calmPrompt}>{calmPrompt}</Text>
         </View>
@@ -140,6 +153,8 @@ export default function AnchorScreen() {
               pressed && styles.ideasButtonPressed,
             ]}
             onPress={handleIdeasPress}
+            accessibilityRole="button"
+            accessibilityLabel="I could use some ideas"
           >
             <Text style={styles.ideasButtonText}>I could use some ideas</Text>
           </Pressable>
@@ -162,17 +177,13 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     position: 'absolute',
-    top: SCREEN_HEIGHT * 0.08,
+    top: SCREEN_HEIGHT * 0.06,
     left: spacing.screenPadding,
     right: spacing.screenPadding,
     height: SCREEN_HEIGHT * 0.35,
     borderRadius: 24,
     overflow: 'hidden',
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    ...createShadow(8, 16, 0.15),
   },
   anchorImage: {
     width: '100%',
@@ -183,7 +194,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.screenPadding,
   },
   calmPromptContainer: {
-    marginTop: SCREEN_HEIGHT * 0.38,
+    // Position below the image: top (6%) + height (35%) + gap (4%) = 45%
+    marginTop: SCREEN_HEIGHT * 0.45,
     alignItems: 'center',
   },
   calmPrompt: {
@@ -198,18 +210,18 @@ const styles = StyleSheet.create({
   affirmationContainer: {
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    marginBottom: spacing.xxl,
+    marginBottom: spacing.xl,
   },
   affirmation: {
     fontFamily: fontFamilies.light,
-    fontSize: 22,
+    fontSize: 20,
     color: colors.textPrimary,
     textAlign: 'center',
-    lineHeight: 32,
+    lineHeight: 30,
   },
   sliderContainer: {
     alignItems: 'center',
-    marginBottom: spacing.xxl,
+    marginBottom: spacing.xl,
   },
   buttonContainer: {
     alignItems: 'center',
@@ -219,11 +231,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.xxl,
     borderRadius: 50,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    ...createShadow(4, 8, 0.1),
   },
   ideasButtonPressed: {
     opacity: 0.9,
