@@ -16,7 +16,7 @@ This document contains all finalized copy for the MVP.
 
 ## Ideas Library (16 Total)
 
-### When You're Running on Empty (Resting State)
+### When You're Running Low
 
 | # | Validation | Title | Content |
 |---|------------|-------|---------|
@@ -25,7 +25,7 @@ This document contains all finalized copy for the MVP.
 | 3 | Your body is carrying stress. Let's help it release. | Try this breath | In for 4. Out for 6. The longer exhale tells your body it's safe. Do it three times. |
 | 4 | You don't have to fix this moment. Just be present in it. | Find a familiar scent | Coffee, a lotion you love, fresh air. Something that brings you back to yourself, even for a moment. |
 
-### When You're Holding Steady (Warming State)
+### When You're Holding Steady
 
 | # | Validation | Title | Content |
 |---|------------|-------|---------|
@@ -36,7 +36,7 @@ This document contains all finalized copy for the MVP.
 | 9 | Small adjustments can shift everything. | Lower and slower | Speak slower and lower. Even well-meaning loud voices can increase stress. A calm, low tone signals safety. |
 | 10 | Simplicity is a gift you can give right now. | One question at a time | "Are you cold?" works. "Do you want a sweater or blanket or should I turn up the heat?" overwhelms. |
 
-### When You've Got Some Capacity (Glowing State)
+### When You've Got This
 
 | # | Validation | Title | Content |
 |---|------------|-------|---------|
@@ -74,7 +74,7 @@ Rotate randomly on each app open. Grouped by energy state but can show any.
 14. This is hard. And you're doing it.
 15. Small steps still count.
 
-### When Glowing
+### When You've Got This
 16. You've got some capacity today. Use it wisely.
 17. Good energy is a gift. Receive it.
 18. Today has possibilities.
@@ -145,7 +145,7 @@ This app is your personal reset button. Open it when caregiving gets heavy. We'l
 
 ### Anchor Screen
 
-**Button:** I could use some ideas
+**Button:** Gentle ideas
 
 **Rotating calm text:** (cycles every 8 seconds)
 - Take a breath
@@ -203,7 +203,7 @@ User can select any of these or upload their own.
 
 ## Emergency Protocol (Phase 2)
 
-If detected: "Red" energy + danger keywords (hurt, hitting, emergency, help)
+If detected: "Running low" energy + danger keywords (hurt, hitting, emergency, help)
 
 **Display:**
 > It sounds like things are really hard right now.

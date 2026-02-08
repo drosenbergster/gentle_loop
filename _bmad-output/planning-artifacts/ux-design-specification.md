@@ -31,11 +31,11 @@ gentle_loop is a mobile app that serves as a "life raft" for dementia family car
 3. **Voice-First Input:** Caregiver can speak instead of typing during crisis.
 
 ### Color Direction: Sunset Gradient
-| State | Label | Color |
-|-------|-------|-------|
-| Low | Resting | Soft twilight purple |
-| Medium | Warming | Dusty rose / coral |
-| Full | Glowing | Golden hour amber |
+| State | User-Facing Label | Color |
+|-------|-------------------|-------|
+| Low | "Running low" | Soft twilight purple |
+| Medium | "Holding steady" | Dusty rose / coral |
+| High | "I've got this" | Golden hour amber |
 
 ## Core User Experience
 
@@ -56,9 +56,9 @@ Open → Anchor (pause) → Energy Check (slider) → Idea (gentle nudge) → Re
 ### Primary User Flow
 1. **App Opens** → Straight to Anchor Screen (no splash delay)
 2. **Anchor Screen** → Full screen photo + affirmation. Mic icon always visible in corner.
-3. **Energy Check** → After 1-2 seconds (or on tap), three sunset states fade in below. Anchor shrinks slightly.
-4. **Input** → User taps an energy state OR speaks via always-available mic
-5. **Idea** → A helpful thought appears based on state + optional voice context
+3. **Energy Check** → Continuous slider overlaid on anchor image. User adjusts to express energy level.
+4. **Input** → User adjusts energy slider OR speaks via mic button
+5. **Idea** → A helpful thought appears based on energy level + optional voice context
 
 ### Effortless Interactions
 - **Immediate Anchor:** No login, no splash, no delay—straight to calm
@@ -68,7 +68,7 @@ Open → Anchor (pause) → Energy Check (slider) → Idea (gentle nudge) → Re
 
 ### Critical Success Moments
 1. **The Pause** — Anchor forces a breath before any action
-2. **The Permission** — Sliding to "Resting" (purple) triggers "It's okay to stop"
+2. **The Permission** — Sliding to "Running low" (purple) triggers "It's okay to stop"
 3. **The Relief** — Idea lands and they feel *seen*, not lectured
 
 ### Experience Principles
@@ -366,20 +366,20 @@ They do NOT expect to learn, configure, or perform.
 The app uses intentionally soft language. "Strategies" felt too clinical and formal—like a training manual. Instead, we use **Ideas**—helpful thoughts that feel like a friend offering a suggestion, not a professional dispensing advice.
 
 **Key Language Decisions:**
-- **Button:** "I could use some ideas" (stating a need, caregiver-centered)
+- **Button:** "Gentle ideas" (soft, inviting, not demanding)
 - **Actions:** "Something else" / "That helps" (not "Another" / "Done")
 - **No category labels** — Just validation + title + idea
 - **No source citations** — Trust comes from the app feeling helpful, not from citing research
 
 ### What the Caregiver Needs by Energy State
 
-| Energy State | How They're Feeling | What Helps |
-|--------------|---------------------|------------|
-| **Resting (Low)** | Running on empty | Permission, settling, self-care |
-| **Warming (Medium)** | Holding steady | Practical tools for the moment |
-| **Glowing (High)** | Some capacity | Setting up for success |
+| Energy Level | User-Facing Label | How They're Feeling | What Helps |
+|--------------|-------------------|---------------------|------------|
+| **Low** | "Running low" | Running on empty | Permission, settling, self-care |
+| **Medium** | "Holding steady" | Managing, holding the line | Practical tools for the moment |
+| **High** | "I've got this" | Some capacity today | Setting up for success |
 
-### Ideas: When You're Running on Empty (Resting)
+### Ideas: When You're Running Low
 
 *Focus: Giving yourself permission*
 
@@ -390,7 +390,7 @@ The app uses intentionally soft language. "Strategies" felt too clinical and for
 | Try this breath | In for 4. Out for 6. The longer exhale tells your body it's safe. Do it three times. |
 | Find a familiar scent | Coffee, a lotion you love, fresh air. Something that brings you back to yourself. |
 
-### Ideas: When You're Holding Steady (Warming)
+### Ideas: When You're Holding Steady
 
 *Focus: Tools for the moment you're in*
 
@@ -403,7 +403,7 @@ The app uses intentionally soft language. "Strategies" felt too clinical and for
 | Lower and slower | Speak slower and lower. A calm tone signals safety. |
 | One question at a time | "Are you cold?" works. "Do you want a sweater or blanket?" overwhelms. |
 
-### Ideas: When You've Got Some Capacity (Glowing)
+### Ideas: When You've Got This
 
 *Focus: Setting yourself up*
 

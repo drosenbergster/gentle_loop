@@ -10,7 +10,7 @@
 | Screen | Purpose | Entry Point |
 |--------|---------|-------------|
 | **Anchor Screen** | Primary emotional reset interface | App launch, after onboarding |
-| **Strategy Card** | Evidence-based guidance delivery | "Show me a strategy" tap |
+| **Ideas Card** | Evidence-based guidance delivery | "Gentle ideas" tap |
 | **Onboarding (4 screens)** | Setup and personalization | First launch only |
 | **Settings** | Customization and preferences | Settings icon tap |
 
@@ -43,11 +43,11 @@ The Anchor Screen is the app's emotional home. It's what caregivers see every ti
 │                                         │
 │  ┌────────────────────────────────────┐ │
 │  │ ════════════════════════════════○  │ │  ← Energy Slider
-│  │  Resting    Warming    Glowing     │ │     Height: 64px
+│  │  Running low  Holding steady  I've got this │ │     Height: 64px
 │  └────────────────────────────────────┘ │
 │                                         │
 │         ┌─────────────────────┐         │
-│         │  Show me a strategy │         │  ← Primary CTA: 56px height
+│         │    Gentle ideas     │         │  ← Primary CTA: 56px height
 │         └─────────────────────┘         │
 │                                         │
 │                                         │  ← Bottom safe area: 34px
@@ -93,7 +93,7 @@ The Anchor Screen is the app's emotional home. It's what caregivers see every ti
 | Track background | Linear gradient (purple → rose → amber) |
 | Thumb size | 32px circle |
 | Thumb color | White with subtle shadow |
-| Labels | "Resting" / "Warming" / "Glowing" below track |
+| Labels | "Running low" / "Holding steady" / "I've got this" alongside track |
 | Label font | Poppins, 14px, weight 400 |
 | Interaction | Drag thumb OR tap anywhere on track |
 
@@ -104,33 +104,30 @@ The Anchor Screen is the app's emotional home. It's what caregivers see every ti
 | Height | 56px |
 | Background | Dynamic based on energy state |
 | Border radius | 28px (pill shape) |
-| Text | "Show me a strategy" |
+| Text | "Gentle ideas" |
 | Font | Poppins, 18px, weight 500 |
 | Shadow | 4px blur, 15% opacity |
 
 ### Screen States
 
 #### Default State (App Launch)
-- Background: `--bg-primary` (warm cream #FAF8F5)
-- Energy slider: Centered position (Warming)
-- Button color: `--energy-warming` (dusty rose)
+- Background: `--bg-primary` (warm cream #FFFBF5)
+- Energy slider: Centered position ("Holding steady")
+- Background tint: Soft rose overlay
 
-#### Resting State (Low Energy)
-- Background tint: Soft purple overlay (15% opacity)
-- Slider thumb: Left position
-- Button: `--energy-resting` (twilight purple)
+#### "Running low" State (Low Energy)
+- Background tint: Soft purple overlay (8% opacity)
+- Slider thumb: Bottom position
 - Affirmation pool: Permission-focused ("It's okay to rest...")
 
-#### Warming State (Medium Energy)
-- Background tint: Soft rose overlay (15% opacity)
+#### "Holding steady" State (Medium Energy)
+- Background tint: Soft rose overlay (8% opacity)
 - Slider thumb: Center position
-- Button: `--energy-warming` (dusty rose)
 - Affirmation pool: Supportive ("You're holding steady...")
 
-#### Glowing State (High Energy)
-- Background tint: Soft amber overlay (15% opacity)
-- Slider thumb: Right position
-- Button: `--energy-glowing` (golden amber)
+#### "I've got this" State (High Energy)
+- Background tint: Soft amber overlay (8% opacity)
+- Slider thumb: Top position
 - Affirmation pool: Encouraging ("You've got this...")
 
 #### Crisis Detection State
@@ -148,7 +145,7 @@ The Anchor Screen is the app's emotional home. It's what caregivers see every ti
 | Slider drag | Real-time background tint change |
 | Slider release | Button color updates, affirmation may change |
 | Tap on track | Thumb animates to tap position |
-| Tap "Show me a strategy" | Strategy Card slides up from bottom |
+| Tap "Gentle ideas" | Ideas Card slides up from bottom |
 | Tap mic icon | Voice input modal appears |
 | No interaction (5s) | Graceful fade to crisis state |
 | Any tap in crisis state | Full UI fades back in |
@@ -158,17 +155,17 @@ The Anchor Screen is the app's emotional home. It's what caregivers see every ti
 | Requirement | Implementation |
 |-------------|----------------|
 | Screen reader | "Anchor image showing [description]. Energy level: [state]" |
-| Slider a11y | Slider announces "Energy level: Resting/Warming/Glowing" |
+| Slider a11y | Slider announces "Energy level: Running low / Holding steady / I've got this" |
 | Touch targets | All icons ≥48x48px tap area |
 | Reduce motion | Disables breathing pulse, instant transitions |
 | High contrast | Ensure 4.5:1 ratio on all text |
 
 ---
 
-## 2. Strategy Card
+## 2. Ideas Card
 
 ### Purpose
-Delivers evidence-based, contextual guidance based on the caregiver's selected energy state. Designed to validate first, then offer actionable support.
+Delivers evidence-based, contextual ideas based on the caregiver's selected energy level. Designed to validate first, then offer actionable support.
 
 ### Layout Specification
 
@@ -236,22 +233,14 @@ Delivers evidence-based, contextual guidance based on the caregiver's selected e
 | Padding | 24px horizontal, 16px top |
 | Max lines | 3 |
 
-#### Strategy Category
-| Property | Value |
-|----------|-------|
-| Font | Poppins, 12px, weight 600, uppercase |
-| Letter spacing | 1px |
-| Color | Energy state color (purple/rose/amber) |
-| Margin top | 20px |
-
-#### Strategy Title
+#### Idea Title
 | Property | Value |
 |----------|-------|
 | Font | Poppins, 22px, weight 600 |
 | Color | `--text-primary` |
 | Margin top | 8px |
 
-#### Strategy Content
+#### Idea Content
 | Property | Value |
 |----------|-------|
 | Font | Poppins, 16px, weight 400 |
@@ -276,43 +265,43 @@ Delivers evidence-based, contextual guidance based on the caregiver's selected e
 | Margin top | 24px |
 | Padding bottom | 24px + safe area |
 
-**"Another" Button (Secondary)**
+**"Something else" Button (Secondary)**
 | Property | Value |
 |----------|-------|
 | Width | 48% |
 | Height | 48px |
 | Background | Transparent |
-| Border | 2px solid `--text-primary` at 30% |
-| Border radius | 24px |
-| Text | "Another", 16px, weight 500 |
+| Border | 1.5px solid dusty rose |
+| Border radius | 9999px (full pill) |
+| Text | "Something else", 15px, weight 500, dusty rose |
 
-**"Done" Button (Primary)**
+**"That helps" Button (Primary)**
 | Property | Value |
 |----------|-------|
 | Width | 48% |
 | Height | 48px |
-| Background | Current energy state color |
-| Border radius | 24px |
-| Text | "Done", 16px, weight 500 |
-| Text color | White (or dark for amber) |
+| Background | Dusty rose |
+| Border radius | 9999px (full pill) |
+| Text | "That helps", 15px, weight 500 |
+| Text color | White |
 
 ### Interaction Behaviors
 
 | Action | Response |
 |--------|----------|
-| Tap "Show me a strategy" | Card slides up, Anchor dims to 40% |
+| Tap "Gentle ideas" | Card slides up, Anchor dims behind overlay |
 | Swipe down on card | Card dismisses, returns to Anchor |
 | Tap dimmed area | Card dismisses |
-| Tap "Another" | Card content cross-fades to new strategy |
-| Tap "Done" | Card dismisses with slide-down |
-| Strategy shown | Random selection from current energy state pool |
+| Tap "Something else" | Card bounces and shows a different idea |
+| Tap "That helps" | Card dismisses with slide-down |
+| Idea shown | Random selection from current energy level pool |
 
 ### Accessibility
 
 | Requirement | Implementation |
 |-------------|----------------|
 | Screen reader | Reads validation, then category, title, content, source |
-| Focus order | Validation → Content → Another → Done |
+| Focus order | Validation → Content → Something else → That helps |
 | Dismiss gesture | Swipe down anywhere on card |
 | Contrast | All text meets WCAG AA |
 
@@ -379,7 +368,7 @@ Delivers evidence-based, contextual guidance based on the caregiver's selected e
 │     No judgment, just information.      │
 │                                         │
 │  3. Get support                         │
-│     Tap for a strategy matched to       │
+│     Tap for ideas matched to            │
 │     your current state.                 │
 │                                         │
 │         ┌─────────────────────┐         │
@@ -590,7 +579,7 @@ Delivers evidence-based, contextual guidance based on the caregiver's selected e
 | Transcription | Real-time display of speech |
 | Auto-submit | After 2 seconds of silence |
 | Cancel | Dismisses and returns to previous state |
-| Result | Voice context influences strategy selection |
+| Result | Voice context influences idea selection / AI response |
 
 ---
 
@@ -622,8 +611,8 @@ Delivers evidence-based, contextual guidance based on the caregiver's selected e
 | Transition | Duration | Easing |
 |------------|----------|--------|
 | Screen background tint | 400ms | ease-in-out |
-| Strategy card slide up | 400ms | ease-out |
-| Strategy card dismiss | 300ms | ease-in |
+| Ideas card slide up | 400ms | ease-out |
+| Ideas card dismiss | 300ms | ease-in |
 | Content cross-fade | 300ms | ease-in-out |
 | Anchor image fade-in | 600ms | ease-out |
 

@@ -31,24 +31,32 @@ All documents in `_bmad-output/planning-artifacts/`:
 | `content-final.md` | All 16 ideas, 20 affirmations, copy |
 | `ux-design-directions.html` | Interactive HTML mockup |
 
-### App Code (In Progress)
+### App Code
 Located in `app/` directory:
 
 ```
 app/
 ├── app/                    # Expo Router screens
-│   ├── _layout.tsx         # Root layout (fonts, providers)
-│   └── index.tsx           # Anchor Screen ✅
+│   ├── _layout.tsx         # Root layout (fonts, providers) ✅
+│   ├── index.tsx           # Anchor Screen ✅
+│   ├── settings.tsx        # Settings screen ✅
+│   └── onboarding/         # Onboarding flow ✅
+│       ├── index.tsx       # Welcome screen
+│       ├── how-it-works.tsx
+│       ├── your-name.tsx
+│       └── your-anchor.tsx
 ├── src/
 │   ├── components/
 │   │   ├── EnergySlider.tsx    # Vertical gradient slider ✅
 │   │   └── IdeasOverlay.tsx    # Ideas card modal ✅
 │   ├── data/
-│   │   ├── ideas.ts            # 16 ideas by energy state ✅
-│   │   └── affirmations.ts     # 20 rotating messages ✅
+│   │   ├── ideas.ts            # 16 ideas by energy level ✅
+│   │   └── affirmations.ts     # 25 rotating messages ✅
 │   ├── stores/
 │   │   ├── energyStore.ts      # Energy state (Zustand) ✅
 │   │   └── settingsStore.ts    # Persisted settings (MMKV) ✅
+│   ├── hooks/
+│   │   └── useAccessibility.ts # Font scaling & contrast ✅
 │   └── theme/
 │       ├── colors.ts           # Sunset gradient palette ✅
 │       ├── typography.ts       # Poppins font system ✅
@@ -66,10 +74,11 @@ app/
 |---------|--------|-------|
 | Anchor Screen | ✅ Complete | Main entry point |
 | Anchor Image | ✅ Complete | Mountains default, with breathing pulse |
-| Rotating Calm Prompts | ✅ Complete | Changes every 8 seconds |
+| Onboarding Flow | ✅ Complete | 4 screens: Welcome, How It Works, Name, Anchor |
+| Settings Screen | ✅ Complete | Name, anchor image, accessibility, about |
 | Affirmations | ✅ Complete | 20 messages, matched to energy |
 | Energy Slider | ✅ Complete | Vertical sunset gradient |
-| Ideas Button | ✅ Complete | "I could use some ideas" |
+| Ideas Button | ✅ Complete | "Gentle ideas" button |
 | Ideas Overlay | ✅ Complete | Validation + title + content |
 | Theme System | ✅ Complete | Colors, typography, spacing |
 | State Management | ✅ Complete | Zustand + MMKV persistence |
@@ -79,12 +88,14 @@ app/
 
 | Feature | Priority | Notes |
 |---------|----------|-------|
-| Onboarding Flow | High | 4 screens: Welcome, How it works, Name, Anchor |
-| Settings Screen | High | Change anchor image, accessibility options |
-| Voice Input | Medium | "I'm feeling..." speech recognition |
-| Custom Images | Medium | Upload own anchor photos |
+| Onboarding Flow | ✅ Complete | 4 screens: Welcome, How it works, Name, Anchor |
+| Settings Screen | ✅ Complete | Change anchor image, accessibility options |
+| AI Guided Support | High | Voice input + AI-powered situational responses |
+| Toolbox | High | Personal collection of strategies that worked |
+| Text-to-Speech | High | AI responses read aloud (configurable) |
+| API Proxy | High | Edge function to secure AI API key |
+| Custom Images | ✅ Complete | Upload own anchor photos (in Settings) |
 | Crisis Detection | Low | Simplify UI after 5s inactivity |
-| Push Notifications | Low | Gentle reminders |
 
 ---
 
@@ -137,9 +148,9 @@ npx expo start --web
 
 ### Colors (Sunset Gradient)
 ```
-Twilight Purple: #6B5B7A  (low energy / resting)
-Dusty Rose:      #C4A4AC  (medium energy / warming)
-Golden Amber:    #E8B87D  (high energy / glowing)
+Twilight Purple: #6B5B7A  (low energy / "Running low")
+Dusty Rose:      #C4A4AC  (medium energy / "Holding steady")
+Golden Amber:    #E8B87D  (high energy / "I've got this")
 Warm Cream:      #FFFBF5  (background)
 ```
 
@@ -158,11 +169,11 @@ Warm Cream:      #FFFBF5  (background)
 ## Ideas Framework
 
 ### Energy States
-| State | Feeling | What Helps |
-|-------|---------|------------|
-| Resting (0-33%) | Running on empty | Permission, settling, self-care |
-| Warming (33-66%) | Holding steady | Practical tools for the moment |
-| Glowing (66-100%) | Some capacity | Setting up for success |
+| Slider Range | User-Facing Label | What Helps |
+|--------------|-------------------|------------|
+| 0-33% | "Running low" | Permission, settling, self-care |
+| 33-66% | "Holding steady" | Practical tools for the moment |
+| 66-100% | "I've got this" | Setting up for success |
 
 ### Idea Card Format
 1. **Validation** (italic) - Acknowledges where they are
@@ -205,23 +216,28 @@ Warm Cream:      #FFFBF5  (background)
 
 ## Next Steps (Recommended Order)
 
-1. **Onboarding Flow**
-   - Create `app/app/onboarding/` screens
-   - Welcome, How it works, Name input, Anchor selection
-   - Route to Anchor Screen after completion
+1. **AI Guided Support** (Voice-First Interaction)
+   - Hold-to-talk mic button on Anchor Screen
+   - Speech-to-text transcription
+   - AI-powered contextual response based on energy level + situation
+   - Sequential suggestion cards (swipe for next)
+   - "That helped" saves to Toolbox
 
-2. **Settings Screen**
-   - Create `app/app/settings.tsx`
-   - Allow changing anchor image
-   - Accessibility toggles (reduce motion, larger text)
+2. **Toolbox** (Personal Strategy Playbook)
+   - Section in Settings screen
+   - Collection of AI suggestions marked as helpful
+   - Local storage via MMKV
 
-3. **Test on Real Device**
+3. **Text-to-Speech Output**
+   - AI responses read aloud (configurable in Settings)
+
+4. **API Proxy**
+   - Edge function to secure AI API key
+   - Route all LLM calls through proxy
+
+5. **Test on Real Device**
    - Build with `eas build` for TestFlight
    - Apple Developer account needed ($99/year)
-
-4. **Voice Input** (Phase 2)
-   - Add expo-speech-recognition
-   - "I'm feeling..." processing
 
 ---
 
