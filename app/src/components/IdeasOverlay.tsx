@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Pressable, Dimensions, Modal, Platform } from 'react-native';
+import { View, StyleSheet, Pressable, Modal, Platform } from 'react-native';
 import { Text } from 'react-native-paper';
 import Animated, {
   useAnimatedStyle,
@@ -18,9 +18,8 @@ import * as Haptics from 'expo-haptics';
 
 import { colors, spacing, fontFamilies, borderRadius } from '../theme';
 import { useEnergyState, useSettingsStore } from '../stores';
+import { useAccessibility } from '../hooks';
 import { getRandomIdea, getNextIdea, Idea } from '../data';
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // Web-compatible shadow helper
 const createShadow = (offsetY: number, radius: number, opacity: number) => {
@@ -46,14 +45,15 @@ interface IdeasOverlayProps {
 export function IdeasOverlay({ visible, onClose }: IdeasOverlayProps) {
   const energyState = useEnergyState();
   const reduceMotion = useSettingsStore(state => state.reduceMotion);
+  const { scale, textColor } = useAccessibility();
   
   const [currentIdea, setCurrentIdea] = useState<Idea | null>(null);
   
   // Animation values
   const overlayOpacity = useSharedValue(0);
-  const cardTranslateY = useSharedValue(SCREEN_HEIGHT);
+  const cardTranslateY = useSharedValue(300);
 
-  // Load initial idea when overlay becomes visible
+  // Handle visibility changes
   useEffect(() => {
     if (visible) {
       const idea = getRandomIdea(energyState);
@@ -66,9 +66,9 @@ export function IdeasOverlay({ visible, onClose }: IdeasOverlayProps) {
         stiffness: reduceMotion ? 150 : 100,
       });
     } else {
-      // Animate out
+      // Reset for next open
       overlayOpacity.value = withTiming(0, { duration: 150 });
-      cardTranslateY.value = withTiming(SCREEN_HEIGHT, { duration: 200 });
+      cardTranslateY.value = withTiming(300, { duration: 200 });
     }
   }, [visible, energyState, reduceMotion]);
 
@@ -122,6 +122,7 @@ export function IdeasOverlay({ visible, onClose }: IdeasOverlayProps) {
       transparent
       animationType="none"
       onRequestClose={onClose}
+      statusBarTranslucent
     >
       <View style={styles.container}>
         {/* Backdrop */}
@@ -137,13 +138,19 @@ export function IdeasOverlay({ visible, onClose }: IdeasOverlayProps) {
         {/* Card */}
         <Animated.View style={[styles.card, cardStyle]}>
           {/* Validation */}
-          <Text style={styles.validation}>"{currentIdea.validation}"</Text>
+          <Text style={[styles.validation, { fontSize: scale(15), lineHeight: scale(22), color: textColor('textSecondary') }]}>
+            "{currentIdea.validation}"
+          </Text>
           
           {/* Title */}
-          <Text style={styles.title}>{currentIdea.title}</Text>
+          <Text style={[styles.title, { fontSize: scale(22), color: textColor('textPrimary') }]}>
+            {currentIdea.title}
+          </Text>
           
           {/* Content */}
-          <Text style={styles.content}>{currentIdea.content}</Text>
+          <Text style={[styles.content, { fontSize: scale(16), lineHeight: scale(26), color: textColor('textPrimary') }]}>
+            {currentIdea.content}
+          </Text>
           
           {/* Actions */}
           <View style={styles.actions}>
@@ -156,7 +163,7 @@ export function IdeasOverlay({ visible, onClose }: IdeasOverlayProps) {
               accessibilityRole="button"
               accessibilityLabel="Something else"
             >
-              <Text style={styles.secondaryButtonText}>Something else</Text>
+              <Text style={[styles.secondaryButtonText, { fontSize: scale(15) }]}>Something else</Text>
             </Pressable>
             
             <Pressable
@@ -168,7 +175,7 @@ export function IdeasOverlay({ visible, onClose }: IdeasOverlayProps) {
               accessibilityRole="button"
               accessibilityLabel="That helps"
             >
-              <Text style={styles.primaryButtonText}>That helps</Text>
+              <Text style={[styles.primaryButtonText, { fontSize: scale(15) }]}>That helps</Text>
             </Pressable>
           </View>
         </Animated.View>
@@ -182,7 +189,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxxl,
+    paddingBottom: spacing.xxl,
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
@@ -192,6 +199,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xxl,
     padding: spacing.xl,
+    maxHeight: '80%',
     ...createShadow(-4, 16, 0.15),
   },
   validation: {

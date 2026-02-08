@@ -1,7 +1,8 @@
 /**
  * Anchor Screen
  * 
- * The primary entry point - a calming reset space
+ * The primary entry point - a calming reset space.
+ * Layout: Large image (with overlaid slider) → Affirmation → Ideas button
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -16,12 +17,14 @@ import Animated, {
   withSequence,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Redirect, useRouter } from 'expo-router';
 
 import { EnergySlider } from '../src/components/EnergySlider';
 import { IdeasOverlay } from '../src/components/IdeasOverlay';
 import { colors, spacing, fontFamilies } from '../src/theme';
 import { useEnergyState, useSettingsStore } from '../src/stores';
-import { getRandomAffirmation, calmPrompts } from '../src/data';
+import { useAccessibility } from '../src/hooks';
+import { getRandomAffirmation } from '../src/data';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -50,23 +53,29 @@ const createShadow = (offsetY: number, radius: number, opacity: number): any => 
 
 export default function AnchorScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const energyState = useEnergyState();
   const anchorImage = useSettingsStore(state => state.anchorImage);
   const reduceMotion = useSettingsStore(state => state.reduceMotion);
+  const hasCompletedOnboarding = useSettingsStore(state => state.hasCompletedOnboarding);
   
+  const { scale, textColor } = useAccessibility();
   const [showIdeas, setShowIdeas] = useState(false);
   const [affirmation, setAffirmation] = useState(() => getRandomAffirmation().text);
-  const [calmPrompt, setCalmPrompt] = useState(calmPrompts[0]);
+
+  // Redirect to onboarding if not completed
+  if (!hasCompletedOnboarding) {
+    return <Redirect href="/onboarding" />;
+  }
 
   // Breathing pulse animation
   const pulseScale = useSharedValue(1);
 
   useEffect(() => {
     if (!reduceMotion) {
-      // Gentle breathing pulse: 4s in, 6s out
       pulseScale.value = withRepeat(
         withSequence(
-          withTiming(1.05, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.02, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
           withTiming(1, { duration: 6000, easing: Easing.inOut(Easing.ease) })
         ),
         -1,
@@ -74,16 +83,6 @@ export default function AnchorScreen() {
       );
     }
   }, [reduceMotion]);
-
-  // Rotate calm prompts
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const randomIndex = Math.floor(Math.random() * calmPrompts.length);
-      setCalmPrompt(calmPrompts[randomIndex]);
-    }, 8000);
-    
-    return () => clearInterval(interval);
-  }, []);
 
   // Update affirmation when energy state changes
   useEffect(() => {
@@ -113,40 +112,50 @@ export default function AnchorScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Background with tint */}
+      {/* Background with subtle energy tint */}
       <View style={[styles.background, { backgroundColor: tintColor }]} />
       
-      {/* Anchor Image */}
-      <Animated.View style={[styles.imageContainer, pulseStyle]}>
-        <Image
-          source={imageSource}
-          style={styles.anchorImage}
-          resizeMode="cover"
-        />
-      </Animated.View>
+      {/* Main Content */}
+      <View style={[styles.content, { paddingTop: insets.top + spacing.md }]}>
+        
+        {/* Settings button */}
+        <Pressable
+          style={styles.settingsButton}
+          onPress={() => router.push('/settings')}
+          accessibilityRole="button"
+          accessibilityLabel="Open settings"
+        >
+          <Text style={styles.settingsIcon}>⚙</Text>
+        </Pressable>
 
-      {/* Content Overlay */}
-      <View style={[styles.contentOverlay, { paddingTop: insets.top + spacing.lg }]}>
-        {/* Calm Prompt - positioned below the image */}
-        <View style={styles.calmPromptContainer}>
-          <Text style={styles.calmPrompt}>{calmPrompt}</Text>
+        {/* Anchor Image with overlaid Energy Slider */}
+        <Animated.View style={[styles.imageWrapper, pulseStyle]}>
+          <View style={styles.imageContainer}>
+            <Image
+              source={imageSource}
+              style={styles.anchorImage}
+              resizeMode="cover"
+            />
+            
+            {/* Energy Slider overlaid on image */}
+            <View style={styles.sliderOverlay}>
+              <EnergySlider overlay />
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Affirmation — responds to energy state */}
+        <View style={styles.affirmationContainer}>
+          <Text style={[styles.affirmation, { fontSize: scale(20), lineHeight: scale(30), color: textColor('textPrimary') }]}>
+            {affirmation}
+          </Text>
         </View>
 
-        {/* Spacer */}
+        {/* Flexible spacer pushes button to bottom */}
         <View style={styles.spacer} />
 
-        {/* Affirmation */}
-        <View style={styles.affirmationContainer}>
-          <Text style={styles.affirmation}>{affirmation}</Text>
-        </View>
-
-        {/* Energy Slider */}
-        <View style={styles.sliderContainer}>
-          <EnergySlider />
-        </View>
-
         {/* Ideas Button */}
-        <View style={[styles.buttonContainer, { paddingBottom: insets.bottom + spacing.xl }]}>
+        <View style={[styles.buttonContainer, { paddingBottom: insets.bottom + spacing.lg }]}>
           <Pressable
             style={({ pressed }) => [
               styles.ideasButton,
@@ -154,9 +163,9 @@ export default function AnchorScreen() {
             ]}
             onPress={handleIdeasPress}
             accessibilityRole="button"
-            accessibilityLabel="I could use some ideas"
+            accessibilityLabel="Gentle ideas for support"
           >
-            <Text style={styles.ideasButtonText}>I could use some ideas</Text>
+            <Text style={[styles.ideasButtonText, { fontSize: scale(15), color: textColor('textPrimary') }]}>Gentle ideas</Text>
           </Pressable>
         </View>
       </View>
@@ -167,6 +176,9 @@ export default function AnchorScreen() {
   );
 }
 
+// Image takes ~55% of viewport
+const IMAGE_HEIGHT = SCREEN_HEIGHT * 0.55;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -175,42 +187,50 @@ const styles = StyleSheet.create({
   background: {
     ...StyleSheet.absoluteFillObject,
   },
+  content: {
+    flex: 1,
+    paddingHorizontal: spacing.screenPadding,
+  },
+  settingsButton: {
+    alignSelf: 'flex-end',
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  settingsIcon: {
+    fontSize: 20,
+    color: colors.textMuted,
+  },
+
+  // -- Image with slider overlay --
+  imageWrapper: {
+    alignSelf: 'center',
+    width: '100%',
+  },
   imageContainer: {
-    position: 'absolute',
-    top: SCREEN_HEIGHT * 0.06,
-    left: spacing.screenPadding,
-    right: spacing.screenPadding,
-    height: SCREEN_HEIGHT * 0.35,
+    width: '100%',
+    height: IMAGE_HEIGHT,
     borderRadius: 24,
     overflow: 'hidden',
-    ...createShadow(8, 16, 0.15),
+    ...createShadow(8, 16, 0.12),
   },
   anchorImage: {
     width: '100%',
     height: '100%',
   },
-  contentOverlay: {
-    flex: 1,
-    paddingHorizontal: spacing.screenPadding,
+  sliderOverlay: {
+    position: 'absolute',
+    bottom: spacing.lg,
+    left: spacing.lg,
   },
-  calmPromptContainer: {
-    // Position below the image: top (6%) + height (35%) + gap (4%) = 45%
-    marginTop: SCREEN_HEIGHT * 0.45,
-    alignItems: 'center',
-  },
-  calmPrompt: {
-    fontFamily: fontFamilies.light,
-    fontSize: 18,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  spacer: {
-    flex: 1,
-  },
+
+  // -- Affirmation --
   affirmationContainer: {
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    marginBottom: spacing.xl,
+    marginTop: spacing.xl,
   },
   affirmation: {
     fontFamily: fontFamilies.light,
@@ -219,17 +239,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 30,
   },
-  sliderContainer: {
-    alignItems: 'center',
-    marginBottom: spacing.xl,
+
+  // -- Spacer --
+  spacer: {
+    flex: 1,
+    minHeight: spacing.lg,
   },
+
+  // -- Ideas button --
   buttonContainer: {
     alignItems: 'center',
   },
   ideasButton: {
     backgroundColor: colors.white,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
     borderRadius: 50,
     ...createShadow(4, 8, 0.1),
   },
@@ -239,7 +263,7 @@ const styles = StyleSheet.create({
   },
   ideasButtonText: {
     fontFamily: fontFamilies.medium,
-    fontSize: 16,
+    fontSize: 15,
     color: colors.textPrimary,
   },
 });

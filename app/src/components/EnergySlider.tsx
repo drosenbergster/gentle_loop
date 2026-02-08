@@ -3,6 +3,11 @@
  * 
  * A vertical gradient slider for checking in on energy levels.
  * Sunset gradient: Twilight Purple (low) → Dusty Rose → Golden Amber (high)
+ * 
+ * Shows permanent labels alongside the track:
+ * - "I've got this" (top)
+ * - "Holding steady" (middle)
+ * - "Running low" (bottom)
  */
 
 import { useCallback } from 'react';
@@ -20,10 +25,19 @@ import * as Haptics from 'expo-haptics';
 
 import { colors, spacing, fontFamilies } from '../theme';
 import { useEnergyStore } from '../stores';
+import { useAccessibility } from '../hooks';
 
-const SLIDER_HEIGHT = 180;
-const SLIDER_WIDTH = 60;
-const THUMB_SIZE = 28;
+// Slider dimensions
+const SLIDER_HEIGHT = 160;
+const SLIDER_WIDTH = 44;
+const THUMB_SIZE = 26;
+
+// Energy level labels (bottom to top)
+const ENERGY_LABELS = [
+  { label: 'Running low', position: 0.15 },
+  { label: 'Holding steady', position: 0.5 },
+  { label: "I've got this", position: 0.85 },
+];
 
 // Web-compatible shadow helper
 const createShadow = (offsetY: number, radius: number, opacity: number) => {
@@ -41,9 +55,15 @@ const createShadow = (offsetY: number, radius: number, opacity: number) => {
   };
 };
 
-export function EnergySlider() {
+interface EnergySliderProps {
+  /** When true, renders with light text for overlay on dark backgrounds */
+  overlay?: boolean;
+}
+
+export function EnergySlider({ overlay = false }: EnergySliderProps) {
   const energy = useEnergyStore(state => state.energy);
   const setEnergy = useEnergyStore(state => state.setEnergy);
+  const { scale, textColor } = useAccessibility();
   
   // Shared value for smooth animation
   const thumbPosition = useSharedValue(energy);
@@ -56,7 +76,6 @@ export function EnergySlider() {
   }, [setEnergy]);
 
   const triggerHaptic = useCallback(() => {
-    // Haptics only work on native
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -68,9 +87,7 @@ export function EnergySlider() {
       runOnJS(triggerHaptic)();
     })
     .onUpdate((event) => {
-      // Calculate position (inverted because 0 is at top visually, but bottom semantically)
       const clampedY = Math.max(0, Math.min(SLIDER_HEIGHT, event.y));
-      // Invert: top of slider = 1 (high energy), bottom = 0 (low energy)
       const newValue = 1 - (clampedY / SLIDER_HEIGHT);
       thumbPosition.value = newValue;
       runOnJS(updateEnergy)(newValue);
@@ -81,7 +98,6 @@ export function EnergySlider() {
     });
 
   const thumbStyle = useAnimatedStyle(() => {
-    // Position from bottom (0) to top (1)
     const positionFromBottom = thumbPosition.value * SLIDER_HEIGHT;
     const scale = isActive.value ? 1.15 : 1;
     
@@ -91,39 +107,72 @@ export function EnergySlider() {
     };
   });
 
-  // Get energy state label
-  const getEnergyLabel = () => {
-    if (energy < 0.33) return 'Resting';
-    if (energy < 0.66) return 'Warming';
-    return 'Glowing';
+  // Determine which label is currently active based on energy
+  const getActiveIndex = () => {
+    if (energy < 0.33) return 0;
+    if (energy < 0.66) return 1;
+    return 2;
   };
+
+  const activeIndex = getActiveIndex();
 
   return (
     <View style={styles.container}>
-      {/* Label */}
-      <Text style={styles.label}>{getEnergyLabel()}</Text>
-      
-      {/* Slider Track */}
-      <GestureDetector gesture={panGesture}>
-        <View style={styles.sliderContainer}>
-          <LinearGradient
-            colors={[colors.goldenAmber, colors.dustyRose, colors.twilightPurple]}
-            style={styles.track}
-            start={{ x: 0.5, y: 1 }}
-            end={{ x: 0.5, y: 0 }}
-          />
-          
-          {/* Thumb */}
-          <Animated.View style={[styles.thumb, thumbStyle]}>
-            <View style={styles.thumbInner} />
-          </Animated.View>
+      {/* "Your energy" context label */}
+      <Text style={[
+        styles.contextLabel,
+        overlay && styles.contextLabelOverlay,
+        !overlay && { color: textColor('textMuted'), fontSize: scale(12) },
+      ]}>
+        Your energy
+      </Text>
+
+      <View style={styles.sliderRow}>
+        {/* Slider Track */}
+        <GestureDetector gesture={panGesture}>
+          <View style={styles.sliderContainer}>
+            {/* Frosted backing for overlay mode */}
+            {overlay && (
+              <View style={styles.frostedBacking} />
+            )}
+            
+            <LinearGradient
+              colors={[colors.goldenAmber, colors.dustyRose, colors.twilightPurple]}
+              style={styles.track}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 1 }}
+            />
+            
+            {/* Thumb */}
+            <Animated.View style={[styles.thumb, thumbStyle]}>
+              <View style={styles.thumbInner} />
+            </Animated.View>
+          </View>
+        </GestureDetector>
+
+        {/* Permanent labels alongside track */}
+        <View style={styles.labelsColumn}>
+          {[...ENERGY_LABELS].reverse().map((item, index) => {
+            const labelIndex = ENERGY_LABELS.length - 1 - index;
+            const isActive = labelIndex === activeIndex;
+            return (
+              <Text
+                key={item.label}
+                style={[
+                  styles.levelLabel,
+                  overlay && styles.levelLabelOverlay,
+                  isActive && styles.levelLabelActive,
+                  isActive && overlay && styles.levelLabelActiveOverlay,
+                  !overlay && { fontSize: scale(12) },
+                  !overlay && isActive && { color: textColor('textSecondary') },
+                  !overlay && !isActive && { color: textColor('textMuted') },
+                ]}
+              >
+                {item.label}
+              </Text>
+            );
+          })}
         </View>
-      </GestureDetector>
-      
-      {/* Energy indicators */}
-      <View style={styles.indicators}>
-        <Text style={styles.indicatorText}>✦</Text>
-        <Text style={styles.indicatorText}>◦</Text>
       </View>
     </View>
   );
@@ -131,21 +180,37 @@ export function EnergySlider() {
 
 const styles = StyleSheet.create({
   container: {
+    alignItems: 'flex-start',
+  },
+  contextLabel: {
+    fontFamily: fontFamilies.light,
+    fontSize: 12,
+    color: colors.textMuted,
+    letterSpacing: 0.5,
+    marginBottom: spacing.sm,
+    marginLeft: 2,
+  },
+  contextLabelOverlay: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  sliderRow: {
+    flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-  },
-  label: {
-    fontFamily: fontFamilies.medium,
-    fontSize: 14,
-    color: colors.textSecondary,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
   },
   sliderContainer: {
     width: SLIDER_WIDTH,
     height: SLIDER_HEIGHT,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  frostedBacking: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: SLIDER_WIDTH / 2,
   },
   track: {
     width: SLIDER_WIDTH,
@@ -169,15 +234,28 @@ const styles = StyleSheet.create({
     borderRadius: (THUMB_SIZE - 8) / 2,
     backgroundColor: colors.warmCream,
   },
-  indicators: {
-    flexDirection: 'column',
+  labelsColumn: {
+    height: SLIDER_HEIGHT,
     justifyContent: 'space-between',
-    height: 40,
-    marginTop: spacing.sm,
+    paddingVertical: spacing.sm,
   },
-  indicatorText: {
+  levelLabel: {
+    fontFamily: fontFamilies.light,
     fontSize: 12,
     color: colors.textMuted,
-    textAlign: 'center',
+    letterSpacing: 0.3,
+  },
+  levelLabelOverlay: {
+    color: 'rgba(255, 255, 255, 0.5)',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  levelLabelActive: {
+    fontFamily: fontFamilies.medium,
+    color: colors.textSecondary,
+  },
+  levelLabelActiveOverlay: {
+    color: 'rgba(255, 255, 255, 0.95)',
   },
 });

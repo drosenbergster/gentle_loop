@@ -3,6 +3,7 @@
  * 
  * Gentle, rotating messages shown on the Anchor Screen.
  * Designed to validate and support without being preachy.
+ * Includes breathing cues merged into the universal pool.
  */
 
 export interface Affirmation {
@@ -12,12 +13,17 @@ export interface Affirmation {
 }
 
 export const affirmations: Affirmation[] = [
-  // Universal (Any State)
+  // Universal (Any State) — includes breathing cues
   { id: 'u1', text: "You're doing something hard. That's worth acknowledging.", category: 'universal' },
   { id: 'u2', text: "You're still here. That matters.", category: 'universal' },
   { id: 'u3', text: 'This moment will pass.', category: 'universal' },
   { id: 'u4', text: "You don't have to have all the answers.", category: 'universal' },
   { id: 'u5', text: 'One thing at a time.', category: 'universal' },
+  { id: 'u6', text: 'Breathe in slowly. You are safe here.', category: 'universal' },
+  { id: 'u7', text: 'A slow exhale. You are doing fine.', category: 'universal' },
+  { id: 'u8', text: "It's okay to pause right here.", category: 'universal' },
+  { id: 'u9', text: 'You are here now. That is enough.', category: 'universal' },
+  { id: 'u10', text: 'Exhale longer than you inhale. Let your body settle.', category: 'universal' },
 
   // When Running on Empty
   { id: 'r1', text: "It's okay to rest.", category: 'resting' },
@@ -33,21 +39,12 @@ export const affirmations: Affirmation[] = [
   { id: 'w4', text: "This is hard. And you're doing it.", category: 'warming' },
   { id: 'w5', text: 'Small steps still count.', category: 'warming' },
 
-  // When Glowing
+  // When You've Got This
   { id: 'g1', text: "You've got some capacity today. Use it wisely.", category: 'glowing' },
   { id: 'g2', text: 'Good energy is a gift. Receive it.', category: 'glowing' },
   { id: 'g3', text: 'Today has possibilities.', category: 'glowing' },
   { id: 'g4', text: "There's space to breathe right now.", category: 'glowing' },
   { id: 'g5', text: 'This is a good moment.', category: 'glowing' },
-];
-
-// Calm breathing prompts (used on anchor screen)
-export const calmPrompts = [
-  'Take a breath',
-  'Exhale longer than you inhale',
-  "It's okay to pause",
-  'You are here now',
-  'This moment is enough',
 ];
 
 /**
@@ -66,12 +63,4 @@ export function getRandomAffirmation(preferCategory?: Affirmation['category']): 
   
   const randomIndex = Math.floor(Math.random() * pool.length);
   return pool[randomIndex];
-}
-
-/**
- * Get a random calm prompt for the breathing state
- */
-export function getRandomCalmPrompt(): string {
-  const randomIndex = Math.floor(Math.random() * calmPrompts.length);
-  return calmPrompts[randomIndex];
 }
