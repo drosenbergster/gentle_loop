@@ -11,6 +11,9 @@
  * SQ-1:    Missing/malformed tag defaults to "suggestion" with warning log
  * FR40:    API key never exposed in responses
  * NFR10:   No credentials in error messages
+ * SEC-C2:  CORS restricted to allowed origins
+ * SEC-C3:  JWT identity extraction for rate limiting
+ * SEC-C4:  Request body size limits enforced
  */
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
@@ -61,6 +64,13 @@ const rateLimitMap = new Map<
   string,
   { count: number; windowStart: number; warned: boolean }
 >();
+
+// Request size limits (SEC-C4)
+const MAX_BODY_SIZE_BYTES = 100_000; // 100KB
+const MAX_CAREGIVER_MESSAGE_LENGTH = 2_000;
+const MAX_CONVERSATION_HISTORY_LENGTH = 10_000;
+const MAX_TOOLBOX_ENTRIES = 15;
+const MAX_TOOLBOX_ENTRY_TEXT_LENGTH = 500;
 
 // Valid energy levels and request types for input validation
 const VALID_ENERGY_LEVELS: EnergyLevel[] = [
@@ -161,13 +171,13 @@ interface RateLimitResult {
   remaining: number;
 }
 
-function checkRateLimit(deviceId: string): RateLimitResult {
+function checkRateLimit(rateLimitKey: string): RateLimitResult {
   const now = Date.now();
-  const entry = rateLimitMap.get(deviceId);
+  const entry = rateLimitMap.get(rateLimitKey);
 
   if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
     // New window
-    rateLimitMap.set(deviceId, {
+    rateLimitMap.set(rateLimitKey, {
       count: 1,
       windowStart: now,
       warned: false,
@@ -189,7 +199,7 @@ function checkRateLimit(deviceId: string): RateLimitResult {
   if (nearCap && !entry.warned) {
     entry.warned = true;
     console.info(
-      `[ai-suggest] Rate limit soft cap reached for device: ${deviceId.substring(0, 8)}...`,
+      `[ai-suggest] Rate limit soft cap reached for: ${rateLimitKey.substring(0, 16)}...`,
     );
   }
 
@@ -201,18 +211,73 @@ function checkRateLimit(deviceId: string): RateLimitResult {
 }
 
 // ─────────────────────────────────────────
-// CORS Headers
+// CORS Headers (SEC-C2: origin-restricted)
 // ─────────────────────────────────────────
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-device-id",
-};
+/**
+ * Allowed web origins for CORS. Set via ALLOWED_ORIGINS env var (comma-separated).
+ * Mobile app requests have no Origin header and are always allowed.
+ * If ALLOWED_ORIGINS is empty, no browser-based cross-origin requests are permitted.
+ */
+const ALLOWED_ORIGINS: string[] = (() => {
+  const raw = Deno.env.get("ALLOWED_ORIGINS") || "";
+  return raw.split(",").map((s) => s.trim()).filter(Boolean);
+})();
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin");
+
+  const baseHeaders: Record<string, string> = {
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type, x-device-id",
+  };
+
+  // No Origin header = non-browser client (mobile app) — always allowed
+  if (!origin) {
+    return baseHeaders;
+  }
+
+  // Check origin against allowlist
+  const isAllowed = ALLOWED_ORIGINS.includes(origin);
+  return {
+    ...baseHeaders,
+    "Access-Control-Allow-Origin": isAllowed ? origin : "null",
+    Vary: "Origin",
+  };
+}
 
 // ─────────────────────────────────────────
-// Input Validation
+// JWT Identity Extraction (SEC-C3)
+// ─────────────────────────────────────────
+
+/**
+ * Extract a rate-limit key from the JWT in the Authorization header.
+ * The JWT is already verified by Supabase's gateway (verify_jwt = true in config.toml).
+ * Authenticated users are rate-limited by user ID; anonymous requests by device ID.
+ */
+function extractRateLimitKey(req: Request, deviceId: string): string {
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) return `device:${deviceId}`;
+
+  try {
+    const token = authHeader.split(" ")[1];
+    const payloadB64 = token.split(".")[1];
+    const payload = JSON.parse(atob(payloadB64));
+
+    // Authenticated user — rate limit by user ID (not spoofable)
+    if (payload.sub && payload.role && payload.role !== "anon") {
+      return `user:${payload.sub}`;
+    }
+  } catch {
+    // JWT decode failed — fall through to device-based limiting
+  }
+
+  return `device:${deviceId}`;
+}
+
+// ─────────────────────────────────────────
+// Input Validation (with size limits SEC-C4)
 // ─────────────────────────────────────────
 
 function validatePayload(
@@ -245,12 +310,51 @@ function validatePayload(
     };
   }
 
+  // --- Size limits (SEC-C4) ---
+  const caregiverMsg = (b.caregiver_message as string).trim();
+  if (caregiverMsg.length > MAX_CAREGIVER_MESSAGE_LENGTH) {
+    return {
+      valid: false,
+      error: `caregiver_message exceeds maximum length of ${MAX_CAREGIVER_MESSAGE_LENGTH} characters.`,
+    };
+  }
+
+  if (typeof b.conversation_history === "string" && b.conversation_history.length > MAX_CONVERSATION_HISTORY_LENGTH) {
+    return {
+      valid: false,
+      error: `conversation_history exceeds maximum length of ${MAX_CONVERSATION_HISTORY_LENGTH} characters.`,
+    };
+  }
+
+  if (Array.isArray(b.toolbox_entries)) {
+    if (b.toolbox_entries.length > MAX_TOOLBOX_ENTRIES) {
+      return {
+        valid: false,
+        error: `toolbox_entries exceeds maximum of ${MAX_TOOLBOX_ENTRIES} entries.`,
+      };
+    }
+    for (const entry of b.toolbox_entries) {
+      if (!entry || typeof entry !== "object") {
+        return { valid: false, error: "Each toolbox entry must be an object." };
+      }
+      if (
+        typeof entry.suggestionText !== "string" ||
+        entry.suggestionText.length > MAX_TOOLBOX_ENTRY_TEXT_LENGTH
+      ) {
+        return {
+          valid: false,
+          error: `Each toolbox entry suggestionText must be a string of at most ${MAX_TOOLBOX_ENTRY_TEXT_LENGTH} characters.`,
+        };
+      }
+    }
+  }
+
   return {
     valid: true,
     payload: {
       energy_level: b.energy_level as EnergyLevel,
       request_type: b.request_type as RequestType,
-      caregiver_message: (b.caregiver_message as string).trim(),
+      caregiver_message: caregiverMsg,
       toolbox_entries: Array.isArray(b.toolbox_entries) ? b.toolbox_entries : undefined,
       conversation_history: typeof b.conversation_history === "string" ? b.conversation_history : undefined,
       device_id: typeof b.device_id === "string" ? b.device_id : undefined,
@@ -259,26 +363,26 @@ function validatePayload(
 }
 
 // ─────────────────────────────────────────
-// Error Response Helpers (NFR10)
-// ─────────────────────────────────────────
-
-function errorResponse(
-  message: string,
-  code: string,
-  status: number,
-): Response {
-  const body: ErrorResponse = { error: message, code };
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-
-// ─────────────────────────────────────────
 // Main Handler
 // ─────────────────────────────────────────
 
 Deno.serve(async (req: Request): Promise<Response> => {
+  // Compute CORS headers for this request (SEC-C2)
+  const corsHeaders = getCorsHeaders(req);
+
+  // Request-scoped error helper (NFR10: no credentials in error messages)
+  function errorResponse(
+    message: string,
+    code: string,
+    status: number,
+  ): Response {
+    const body: ErrorResponse = { error: message, code };
+    return new Response(JSON.stringify(body), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
@@ -287,6 +391,16 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // Only accept POST
   if (req.method !== "POST") {
     return errorResponse("Method not allowed.", "METHOD_NOT_ALLOWED", 405);
+  }
+
+  // --- Request size check (SEC-C4) ---
+  const contentLength = parseInt(req.headers.get("content-length") || "0", 10);
+  if (contentLength > MAX_BODY_SIZE_BYTES) {
+    return errorResponse(
+      "Request body too large.",
+      "PAYLOAD_TOO_LARGE",
+      413,
+    );
   }
 
   // --- Environment check ---
@@ -326,9 +440,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
   const payload = validation.payload;
 
-  // --- Rate limiting (ARCH-12) ---
+  // --- Rate limiting (ARCH-12, SEC-C3) ---
   const deviceId = payload.device_id || req.headers.get("x-device-id") || "anonymous";
-  const rateCheck = checkRateLimit(deviceId);
+  const rateLimitKey = extractRateLimitKey(req, deviceId);
+  const rateCheck = checkRateLimit(rateLimitKey);
 
   if (!rateCheck.allowed) {
     return errorResponse(
