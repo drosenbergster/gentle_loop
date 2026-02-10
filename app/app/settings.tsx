@@ -36,7 +36,7 @@ import {
   type EnergyLevel,
   ENERGY_LEVELS,
 } from '../src/stores';
-import type { ResponseMode, TTSSpeed } from '../src/stores/settingsStore';
+// TTS types removed — TTS is disabled
 import { useAccessibility } from '../src/hooks';
 
 // --- Constants ---
@@ -53,17 +53,7 @@ const ENERGY_LABELS: Record<EnergyLevel, string> = {
   ive_got_this: "I've got this",
 };
 
-const RESPONSE_MODE_OPTIONS: { value: ResponseMode; label: string }[] = [
-  { value: 'text', label: 'Text' },
-  { value: 'both', label: 'Both' },
-  { value: 'audio', label: 'Audio' },
-];
-
-const TTS_SPEED_OPTIONS: { value: TTSSpeed; label: string }[] = [
-  { value: 'slower', label: 'Slower' },
-  { value: 'default', label: 'Default' },
-  { value: 'faster', label: 'Faster' },
-];
+// TTS options removed — TTS is disabled
 
 // --- Shared Components ---
 
@@ -191,16 +181,11 @@ export default function SettingsScreen() {
   const reduceMotion = useSettingsStore((s) => s.reduceMotion);
   const largerText = useSettingsStore((s) => s.largerText);
   const highContrast = useSettingsStore((s) => s.highContrast);
-  const responseMode = useSettingsStore((s) => s.responseMode);
-  const ttsSpeed = useSettingsStore((s) => s.ttsSpeed);
-
   const setUserName = useSettingsStore((s) => s.setUserName);
   const setAnchorImage = useSettingsStore((s) => s.setAnchorImage);
   const setReduceMotion = useSettingsStore((s) => s.setReduceMotion);
   const setLargerText = useSettingsStore((s) => s.setLargerText);
   const setHighContrast = useSettingsStore((s) => s.setHighContrast);
-  const setResponseMode = useSettingsStore((s) => s.setResponseMode);
-  const setTTSSpeed = useSettingsStore((s) => s.setTTSSpeed);
 
   // Energy store
   const energyLevel = useEnergyStore((s) => s.energyLevel);
@@ -581,29 +566,11 @@ export default function SettingsScreen() {
           AI RESPONSE
         </Text>
         <View style={styles.section}>
-          <View style={styles.aiRow}>
-            <Text style={[rowStyles.label, labelA11y]}>Response Mode</Text>
-            <Text style={[rowStyles.description, descA11y, { marginBottom: spacing.md }]}>
-              How the AI delivers suggestions
-            </Text>
-            <SegmentedControl
-              options={RESPONSE_MODE_OPTIONS}
-              value={responseMode}
-              onChange={setResponseMode}
-              labelStyle={{ fontSize: scale(fontSizes.sm) }}
-            />
-          </View>
           <View style={[styles.aiRow, { borderBottomWidth: 0 }]}>
-            <Text style={[rowStyles.label, labelA11y]}>Speech Speed</Text>
-            <Text style={[rowStyles.description, descA11y, { marginBottom: spacing.md }]}>
-              How fast the AI reads suggestions aloud
+            <Text style={[rowStyles.label, labelA11y]}>Responses are text-only</Text>
+            <Text style={[rowStyles.description, descA11y]}>
+              Suggestions appear as text on screen
             </Text>
-            <SegmentedControl
-              options={TTS_SPEED_OPTIONS}
-              value={ttsSpeed}
-              onChange={setTTSSpeed}
-              labelStyle={{ fontSize: scale(fontSizes.sm) }}
-            />
           </View>
         </View>
 
@@ -668,7 +635,10 @@ export default function SettingsScreen() {
             <View style={rowStyles.textColumn}>
               <Text style={[rowStyles.label, labelA11y]}>Gentle Loop</Text>
               <Text style={[rowStyles.description, descA11y]}>
-                A wellness support tool for caregivers. Not a medical device.
+                A wellness support tool for family caregivers. This app does not
+                provide medical advice, diagnoses, or treatment. It is not a
+                substitute for professional medical care. In an emergency, always
+                call 911.
               </Text>
             </View>
           </View>

@@ -338,8 +338,9 @@ export default function OnboardingScreen() {
           {disclaimerAccepted && <Text style={styles.checkboxMark}>✓</Text>}
         </View>
         <Text style={styles.disclaimerText}>
-          I understand this is a wellness tool, not a medical device. It doesn't
-          diagnose, treat, or replace professional care.
+          I understand this is a wellness support tool, not a medical device. It
+          does not diagnose, treat, or replace professional medical care. In an
+          emergency, always call 911.
         </Text>
       </Pressable>
     </View>

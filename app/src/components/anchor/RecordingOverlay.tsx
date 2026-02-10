@@ -27,8 +27,6 @@ interface RecordingOverlayProps {
   visible: boolean;
   /** Seconds recorded so far */
   duration: number;
-  /** Live interim transcript */
-  interimTranscript: string;
   /** Whether to reduce motion */
   reduceMotion: boolean;
 }
@@ -36,7 +34,6 @@ interface RecordingOverlayProps {
 export function RecordingOverlay({
   visible,
   duration,
-  interimTranscript,
   reduceMotion,
 }: RecordingOverlayProps) {
   const pulseScale = useSharedValue(1);
@@ -96,12 +93,8 @@ export function RecordingOverlay({
       {/* Duration */}
       <Text style={styles.duration}>{timeDisplay}</Text>
 
-      {/* Interim transcript preview */}
-      {interimTranscript.length > 0 && (
-        <Text style={styles.transcript} numberOfLines={2}>
-          {interimTranscript}
-        </Text>
-      )}
+      {/* Listening indicator */}
+      <Text style={styles.listeningText}>Listening...</Text>
 
       {/* Hint */}
       <Text style={styles.hint}>Release to finish</Text>
@@ -148,14 +141,12 @@ const styles = StyleSheet.create({
     color: colors.white,
     marginTop: spacing.lg,
   },
-  transcript: {
+  listeningText: {
     fontFamily: fontFamilies.light,
     fontSize: 15,
-    color: 'rgba(255, 255, 255, 0.85)',
+    color: 'rgba(255, 255, 255, 0.7)',
     textAlign: 'center',
     marginTop: spacing.md,
-    paddingHorizontal: spacing.xxl,
-    maxWidth: 300,
   },
   hint: {
     fontFamily: fontFamilies.regular,

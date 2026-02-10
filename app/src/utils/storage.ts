@@ -79,6 +79,22 @@ function createSecureStorage(): MMKV {
 export const storage = createSecureStorage();
 
 /**
+ * Get or create a persistent device ID for rate limiting.
+ * Stored in MMKV (not in SecureStore — it's not a secret, just an identifier).
+ */
+const DEVICE_ID_KEY = 'gentle-loop-device-id';
+export function getDeviceId(): string {
+  let id = storage.getString(DEVICE_ID_KEY);
+  if (!id) {
+    id = Array.from({ length: 16 }, () =>
+      Math.floor(Math.random() * 16).toString(16),
+    ).join('');
+    storage.set(DEVICE_ID_KEY, id);
+  }
+  return id;
+}
+
+/**
  * Storage key constants — prevents typos and centralizes key naming.
  */
 export const STORAGE_KEYS = {

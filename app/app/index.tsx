@@ -55,6 +55,7 @@ import {
   MESSAGE_AUTO_DISMISS_MS,
 } from '../src/hooks';
 import { getRandomAffirmation } from '../src/data';
+import { getDeviceId } from '../src/utils';
 import {
   getAISuggestion,
   AIServiceError,
@@ -71,6 +72,12 @@ const defaultImages: Record<string, any> = {
 
 const AFFIRMATION_INTERVAL_MS = 60_000;
 const OFFLINE_TOAST_DURATION_MS = 1500;
+
+function getGreeting(name: string): string {
+  const hour = new Date().getHours();
+  const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+  return name ? `Good ${timeOfDay}, ${name}` : `Good ${timeOfDay}`;
+}
 
 const createShadow = (
   offsetY: number,
@@ -96,6 +103,7 @@ export default function AnchorScreen() {
   const router = useRouter();
   const energyLevel = useEnergyLevel();
   const anchorImage = useSettingsStore((s) => s.anchorImage);
+  const userName = useSettingsStore((s) => s.userName);
   const reduceMotion = useSettingsStore((s) => s.reduceMotion);
   const hasCompletedOnboarding = useSettingsStore(
     (s) => s.hasCompletedOnboarding,
@@ -142,15 +150,11 @@ export default function AnchorScreen() {
       setShowCard(false);
 
       // Add caregiver turn to thread
-      if (requestType !== 'another') {
-        conversation.addCaregiverTurn(
-          requestType === 'another'
-            ? '[requested another suggestion]'
-            : message,
-        );
-      } else {
-        conversation.addCaregiverTurn('[requested another suggestion]');
-      }
+      conversation.addCaregiverTurn(
+        requestType === 'another'
+          ? '[requested another suggestion]'
+          : message,
+      );
 
       try {
         const result = await getAISuggestion({
@@ -159,6 +163,7 @@ export default function AnchorScreen() {
           caregiverMessage: message,
           toolboxEntries,
           conversationHistory: conversation.getHistoryString(),
+          deviceId: getDeviceId(),
         });
 
         // Add assistant turn
@@ -297,6 +302,23 @@ export default function AnchorScreen() {
     ? defaultImages[anchorImage]
     : { uri: anchorImage };
 
+  // --- Breathing timer handlers (Epic 3) ---
+  const cancelBreathing = useCallback(() => {
+    setShowBreathing(false);
+  }, []);
+
+  const handleBreathingExpired = useCallback(() => {
+    setShowBreathing(false);
+    setShowCard(false);
+    sendToAI('[breathing timer completed — ready for a practical suggestion]', 'timer_follow_up');
+  }, [sendToAI]);
+
+  const handleBreathingSkip = useCallback(() => {
+    setShowBreathing(false);
+    setShowCard(false);
+    sendToAI('[skipped breathing — ready for a practical suggestion]', 'timer_follow_up');
+  }, [sendToAI]);
+
   // --- Mic handlers ---
   const handleMicPress = useCallback(() => {
     if (!isOnline) {
@@ -312,7 +334,7 @@ export default function AnchorScreen() {
 
   const handleMicPressIn = useCallback(() => {
     if (isOnline) {
-      cancelBreathing(); // Story 3.3: Mic press cancels breathing timer
+      cancelBreathing();
       voice.onPressIn();
     }
   }, [isOnline, voice.onPressIn, cancelBreathing]);
@@ -321,22 +343,33 @@ export default function AnchorScreen() {
     if (isOnline && voice.state !== 'idle') voice.onPressOut();
   }, [isOnline, voice.state, voice.onPressOut]);
 
-  // --- Card action handlers (Phase B) ---
+  // --- Card action handlers ---
+  const showToast = useCallback((text: string, durationMs = 2000) => {
+    setToastText(text);
+    setShowOfflineToast(true);
+    if (messageTimerRef.current) clearTimeout(messageTimerRef.current);
+    messageTimerRef.current = setTimeout(() => {
+      setShowOfflineToast(false);
+      setToastText('');
+    }, durationMs);
+  }, []);
+
   const handleThatWorked = useCallback(() => {
-    tts.stop(); // Stop TTS on card dismiss
+    tts.stop();
     if (currentSuggestion) {
       addToolboxEntry(currentSuggestion.text);
+      showToast('Saved to your Toolbox');
     }
     setShowCard(false);
     setShowEncouragement(false);
     setCurrentSuggestion(null);
-    lastEncouragementRef.current = null; // Reset encouragement for next thread
+    lastEncouragementRef.current = null;
     conversation.clearThread();
-  }, [currentSuggestion, addToolboxEntry, conversation, tts]);
+  }, [currentSuggestion, addToolboxEntry, conversation, tts, showToast]);
 
   const handleDismiss = useCallback(() => {
-    tts.stop(); // Stop TTS on card dismiss
-    cancelBreathing(); // Cancel any active breathing timer
+    tts.stop();
+    cancelBreathing();
     setShowCard(false);
     setShowEncouragement(false);
     setCurrentSuggestion(null);
@@ -345,21 +378,15 @@ export default function AnchorScreen() {
   }, [conversation, tts, cancelBreathing]);
 
   const handleAnother = useCallback(() => {
-    tts.stop(); // Stop current TTS before requesting another
-    cancelBreathing(); // Story 3.3: Active engagement cancels timer
+    tts.stop();
+    cancelBreathing();
     if (conversation.isOutOfIdeas()) {
-      // Don't call API again — show app message
-      setToastText(
+      showToast(
         toolboxEntries.length > 0
           ? "That's all I have for now. Your Toolbox might have something that fits."
           : "That's all I have for now. Sometimes the best thing is just being there.",
+        MESSAGE_AUTO_DISMISS_MS,
       );
-      setShowOfflineToast(true);
-      if (messageTimerRef.current) clearTimeout(messageTimerRef.current);
-      messageTimerRef.current = setTimeout(() => {
-        setShowOfflineToast(false);
-        setToastText('');
-      }, MESSAGE_AUTO_DISMISS_MS);
       return;
     }
     sendToAI('[requested another suggestion]', 'another');
@@ -368,7 +395,7 @@ export default function AnchorScreen() {
   // Card mic: follow-up recording
   const handleCardMicPressIn = useCallback(() => {
     if (isOnline) {
-      cancelBreathing(); // Story 3.3: Card mic cancels breathing timer
+      cancelBreathing();
       voice.onPressIn();
     }
   }, [isOnline, voice.onPressIn, cancelBreathing]);
@@ -376,25 +403,6 @@ export default function AnchorScreen() {
   const handleCardMicPressOut = useCallback(() => {
     if (isOnline && voice.state !== 'idle') voice.onPressOut();
   }, [isOnline, voice.state, voice.onPressOut]);
-
-  // --- Breathing timer handlers (Epic 3) ---
-  const cancelBreathing = useCallback(() => {
-    setShowBreathing(false);
-  }, []);
-
-  const handleBreathingExpired = useCallback(() => {
-    setShowBreathing(false);
-    setShowCard(false);
-    // Auto follow-up (FR15) — timer_follow_up request
-    sendToAI('[breathing timer completed — ready for a practical suggestion]', 'timer_follow_up');
-  }, [sendToAI]);
-
-  const handleBreathingSkip = useCallback(() => {
-    setShowBreathing(false);
-    setShowCard(false);
-    // Skip also sends timer_follow_up (same as expiry)
-    sendToAI('[skipped breathing — ready for a practical suggestion]', 'timer_follow_up');
-  }, [sendToAI]);
 
   // --- Text input fallback (Story 1.10) ---
   const handleOpenTextInput = useCallback(() => {
@@ -456,7 +464,6 @@ export default function AnchorScreen() {
       <RecordingOverlay
         visible={isRecording}
         duration={voice.recordingDuration}
-        interimTranscript={voice.interimTranscript}
         reduceMotion={reduceMotion}
       />
 
@@ -505,13 +512,25 @@ export default function AnchorScreen() {
         <View style={styles.affirmationContainer}>
           <Text
             style={[
+              styles.greeting,
+              {
+                fontSize: scale(15),
+                color: textColor('textMuted'),
+              },
+            ]}
+          >
+            {getGreeting(userName)}
+          </Text>
+          <Text
+            style={[
               styles.affirmation,
               {
-                fontSize: scale(20),
-                lineHeight: scale(30),
+                fontSize: scale(16),
+                lineHeight: scale(24),
                 color: textColor('textPrimary'),
               },
             ]}
+            numberOfLines={5}
           >
             {affirmation}
           </Text>
@@ -619,13 +638,13 @@ const styles = StyleSheet.create({
   },
   settingsButton: {
     alignSelf: 'flex-end',
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.sm,
   },
-  settingsIcon: { fontSize: 20, color: colors.textMuted },
+  settingsIcon: { fontSize: 22, color: colors.textMuted },
   imageWrapper: { alignSelf: 'center' },
   imageContainer: {
     borderRadius: 24,
@@ -638,12 +657,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     marginTop: spacing.xl,
   },
+  greeting: {
+    fontFamily: fontFamilies.medium,
+    fontSize: 15,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginBottom: spacing.xs,
+  },
   affirmation: {
     fontFamily: fontFamilies.light,
-    fontSize: 20,
+    fontSize: 16,
     color: colors.textPrimary,
     textAlign: 'center',
-    lineHeight: 30,
+    lineHeight: 24,
   },
   spacer: { flex: 1, minHeight: spacing.lg },
   toastContainer: {

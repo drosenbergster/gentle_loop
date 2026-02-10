@@ -44,8 +44,8 @@ import { useAccessibility } from '../hooks';
 // Constants
 // ─────────────────────────────────────────
 
-/** Crisis detection: fade card after 5s of no interaction (UX-3) */
-export const INACTIVITY_TIMEOUT_MS = 5_000;
+/** Fade card after 30s of no interaction — enough time to read and re-read (UX-3) */
+export const INACTIVITY_TIMEOUT_MS = 30_000;
 
 /** Swipe dismiss threshold — px the card must travel right to trigger dismiss */
 const SWIPE_DISMISS_THRESHOLD = 100;
@@ -131,7 +131,7 @@ export function SuggestionCard({
 
     inactivityRef.current = setTimeout(() => {
       setIsFaded(true);
-      cardOpacity.value = withTiming(0.15, { duration: 800 });
+      cardOpacity.value = withTiming(0.5, { duration: 800 });
     }, INACTIVITY_TIMEOUT_MS);
   }, [isFaded, cardOpacity]);
 
