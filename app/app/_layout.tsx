@@ -18,15 +18,12 @@ import {
   Poppins_700Bold,
 } from '@expo-google-fonts/poppins';
 import * as SplashScreen from 'expo-splash-screen';
-import { useSettingsStore } from '../src/stores';
 import { colors } from '../src/theme';
 
 // Keep splash screen visible while loading fonts
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const hydrate = useSettingsStore(state => state.hydrate);
-  
   const [fontsLoaded] = useFonts({
     Poppins_300Light,
     Poppins_400Regular,
@@ -34,11 +31,6 @@ export default function RootLayout() {
     Poppins_600SemiBold,
     Poppins_700Bold,
   });
-
-  useEffect(() => {
-    // Hydrate settings from storage on mount
-    hydrate();
-  }, [hydrate]);
 
   useEffect(() => {
     if (fontsLoaded) {

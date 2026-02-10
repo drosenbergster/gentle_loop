@@ -59,7 +59,7 @@ The Anchor Screen is deliberately minimal—image, affirmation, mic button. Noth
 *   **Local Data:** All data stored on device. No login wall.
 
 **Energy Check (Moved to Settings)**
-*   **Energy Slider:** Continuous slider ("Running low" → "Holding steady" → "I've got this") now lives in Settings, not on the Anchor Screen. Caregiver sets their energy level when they think to—morning coffee, a quiet moment—and it persists. The AI uses it as tone context.
+*   **Energy Slider:** 3-position discrete slider ("Running low" → "Holding steady" → "I've got this") now lives in Settings, not on the Anchor Screen. Caregiver sets their energy level when they think to—morning coffee, a quiet moment—and it persists. The AI uses it as tone context.
 *   **Two Effective States:** The AI treats energy as two functional states:
     *   **"Running low":** AI leads with permission to pause/breathe (1-2 min), then auto-follows-up with a practical suggestion.
     *   **"Holding steady" / "I've got this":** AI gives practical, actionable suggestions immediately.
@@ -76,6 +76,8 @@ The Anchor Screen is deliberately minimal—image, affirmation, mic button. Noth
 *   **Swipe left-to-right** also dismisses (same as tapping Dismiss).
 *   **"Still With You" Encouragement:** After 2+ suggestion cycles without resolution, the app injects an encouraging meta-message before the next suggestion (e.g., "We're in this together. More ideas coming.").
 *   **Timer-Based Follow-Up:** When the AI suggests a breathing/pause activity for a "Running low" caregiver, the app starts a 1-2 minute timer. When it expires, the app proactively offers a practical follow-up suggestion without the caregiver needing to ask.
+*   **Toolbox-Aware Suggestions:** The AI receives the caregiver's Toolbox entries as context with every request. It avoids redundant suggestions, references known-good strategies when relevant, and uses Toolbox entries as signal for what types of interventions work for this specific care recipient.
+*   **Conversation Pivot:** After ~3-4 suggestions that don't land, the AI shifts from situation-focused suggestions to caregiver-focused inquiry — asking what's getting in the way and whether the caregiver needs emotional support rather than another technique.
 *   **Text Input Fallback:** For users who prefer typing or when voice isn't appropriate.
 *   **Response Settings:** In Settings, caregiver can choose response mode: text only, audio only, or both (default: both).
 
@@ -84,7 +86,7 @@ The Anchor Screen is deliberately minimal—image, affirmation, mic button. Noth
 
 ### Growth Features (Phase 2)
 *   **Daily Energy Check-In Nudge:** On first app open of the day, a subtle non-blocking banner asks "How's your energy today?" with a quick slider that dismisses. Keeps energy level fresh without cluttering the Anchor Screen permanently.
-*   **Passive Learning:** The AI begins to recognize patterns from the Toolbox and usage history (e.g., "medication refusal" comes up frequently at 6:45 PM). Suggests known-good strategies first. Never stores identifying health information.
+*   **Passive Learning:** The AI begins to recognize patterns from usage history (e.g., "medication refusal" comes up frequently at 6:45 PM). Suggests known-good strategies proactively. Never stores identifying health information.
 *   **Companion Mode:** Digital Whiteboard castable to TV/Tablet (Date, Time, Next Event).
 *   **Family Sticky Notes:** Asynchronous messages from family to the Anchor Screen (Cloud Sync).
 *   **Emergency Contact Framework:** Configurable emergency contacts with contextual surfacing during high-stress interactions. *(Pinned from MVP for later design.)*
@@ -158,7 +160,8 @@ The Anchor Screen is deliberately minimal—image, affirmation, mic button. Noth
 *   **Four-Action Suggestion Card:** "That worked" (save) / "Dismiss" / "Another" / Mic (follow-up).
 *   **Timer-Based Recharge:** When the AI suggests a pause for a "Running low" caregiver, the app auto-follows-up with a practical suggestion after 1-2 minutes.
 *   **"Still With You" Encouragement:** After 2+ cycles, inject an encouraging message before the next suggestion.
-*   **Toolbox Persistence:** Saved strategies persist locally and are accessible from Settings.
+*   **Toolbox Persistence & AI Integration:** Saved strategies persist locally, are accessible from Settings, and are sent as context with every AI request to personalize suggestions.
+*   **Conversation Threading:** Context persists within a flow (5-7 turns), resets on return to Anchor Screen. After ~3-4 failed suggestions, the AI pivots to caregiver-focused inquiry.
 *   **Silent Messaging (Phase 2):** "Sticky Notes" must be push-notification silent but visually persistent.
 *   **Casting/Web View (Phase 2):** "Companion Mode" must be a simple URL or Cast target that never sleeps (Wake Lock).
 
@@ -180,6 +183,8 @@ The Anchor Screen is deliberately minimal—image, affirmation, mic button. Noth
 
 ### AI System Prompt: Tone & Behavior
 
+> **Full Specification:** See `ai-system-prompt-spec.md` for the complete AI system prompt specification, including knowledge base taxonomy, conversation mechanics, the conversation pivot, and Toolbox integration design.
+
 **Persona:** An honest, grounded friend who has experience with dementia caregiving. Not a therapist, not a textbook, not a cheerleader. Someone who gets it and gives you one useful thing to try.
 
 **Response Pattern:** Loosely follows validation → suggestion → reassurance, but must feel *natural*. Vary phrasing. Never sound templated or robotic. Get to the point quickly—there's urgency.
@@ -196,6 +201,12 @@ The Anchor Screen is deliberately minimal—image, affirmation, mic button. Noth
 **All Interventions:** Should be doable in **1-2 minutes**. Quick and simple regardless of energy level.
 
 **If Caregiver Is Actively Engaging** (swiping, tapping "Another," speaking follow-ups): Respond **immediately**. No waiting. The timer-based follow-up only applies when the AI explicitly suggests a pause.
+
+**Conversation Pivot (~3-4 Failed Suggestions):** If multiple suggestions don't land, the AI shifts from providing intervention suggestions to understanding what the caregiver needs. It asks gentle clarifying questions about what's getting in the way — surfacing whether they need different suggestions, emotional support, or permission to let go of the situation.
+
+**Toolbox-Aware (MVP):** The AI receives Toolbox entries as context. It avoids redundant suggestions, references known-good strategies when relevant, and uses the Toolbox as signal for what types of interventions work for this specific care recipient.
+
+**Knowledge Base:** The AI draws from five pillars of dementia care knowledge (Person-Centered Care, Non-Pharmacological Interventions, Everyday Care Management, Environment & Technology, Caregiver Support) encompassing 17 evidence-based intervention categories. It never names these categories — it describes techniques in plain, actionable language. See `ai-system-prompt-spec.md` for the complete intervention taxonomy.
 
 ### Privacy & Data Security
 
@@ -317,11 +328,15 @@ The Anchor Screen is deliberately minimal—image, affirmation, mic button. Noth
     19. **Settings Additions:** Energy slider, response mode (text/audio/both), Toolbox.
     20. **Onboarding Step 5:** "Meet the Mic" — introduces voice feature + requests microphone permission.
     21. **API Proxy:** Edge function to secure API key.
+    22. **Toolbox-Aware AI Context:** Toolbox entries sent with every AI request for personalized, non-redundant suggestions.
+    23. **Conversation Threading:** Context persists within a flow (5-7 turns max), resets on return to Anchor Screen.
+    24. **Conversation Pivot:** After ~3-4 declined suggestions, AI shifts from situation-focused to caregiver-focused inquiry.
 
 ### Post-MVP Features
 *   **Phase 2 (Growth):**
     *   **Daily Energy Check-In Nudge:** Subtle non-blocking banner on first open of the day: "How's your energy today?" with quick slider. Dismisses easily.
-    *   **Passive Learning:** AI references Toolbox and usage patterns to prioritize known-good strategies.
+    *   **Passive Learning:** AI recognizes usage patterns (e.g., recurring situations at specific times) and proactively suggests known-good strategies.
+    *   **Support System Section in Settings:** Caregiver can add family members, contacts, and resources. The AI can reference these when relevant (e.g., "Would [contact name] be able to help with this?").
     *   **Companion Mode:** Casting to TV/Tablet.
     *   **Sticky Notes:** Invite Family → Cloud Sync → Shared Wall.
     *   **Emergency Contact Framework:** Configurable contacts with contextual surfacing.
@@ -345,7 +360,7 @@ The Anchor Screen is deliberately minimal—image, affirmation, mic button. Noth
 *   **FR2:** Affirmations rotate and adapt based on the caregiver's energy level (set in Settings).
 
 ### Energy Check (In Settings)
-*   **FR3:** Caregiver can set their energy level using a continuous slider ("Running low" / "Holding steady" / "I've got this") in the Settings screen.
+*   **FR3:** Caregiver can set their energy level using a 3-position discrete slider that snaps to "Running low" / "Holding steady" / "I've got this" in the Settings screen. No intermediate values are produced.
 *   **FR4:** The energy level persists across sessions and is sent as context with every AI request.
 
 ### AI Guided Support (Voice-First Interaction)
@@ -369,9 +384,13 @@ The Anchor Screen is deliberately minimal—image, affirmation, mic button. Noth
 *   **FR16:** When energy is "Holding steady" or "I've got this," the AI gives a practical, actionable suggestion immediately with no preamble.
 *   **FR17:** If the caregiver is actively engaging (tapping "Another," speaking follow-ups), the AI responds immediately regardless of energy state. The timer only applies when the AI explicitly suggests a pause.
 
-### Encouragement & Persistence
+### Conversation Threading & Persistence
 *   **FR18:** After 2+ suggestion cycles without the caregiver tapping "That worked," the app displays an encouraging meta-message before the next suggestion (e.g., "We're in this together. More ideas coming.").
 *   **FR19:** All interventions suggested by the AI should be achievable in 1-2 minutes.
+*   **FR42:** A conversation thread persists from the first mic press through all follow-up interactions (mic follow-ups and "Another" taps) until the caregiver dismisses all cards and returns to the Anchor Screen.
+*   **FR43:** The AI receives full conversation context within a thread: original situation, energy level, all previous suggestions given, Toolbox entries, and follow-up input. Maximum 5-7 turns per thread.
+*   **FR44:** After approximately 3-4 suggestions that the caregiver declines, the AI pivots from situation-focused suggestions to caregiver-focused inquiry—asking clarifying questions about why the suggestions aren't landing and whether the caregiver needs a different kind of support.
+*   **FR45:** When the AI has no more novel suggestions, it acknowledges this honestly, redirects the caregiver to their Toolbox, and affirms that their presence matters.
 
 ### Toolbox (Personal Strategy Playbook)
 *   **FR20:** The Toolbox is accessible from the Settings screen, keeping the Anchor Screen focused and uncluttered.
@@ -379,6 +398,7 @@ The Anchor Screen is deliberately minimal—image, affirmation, mic button. Noth
 *   **FR22:** Each Toolbox entry includes the suggestion text and the date it was saved.
 *   **FR23:** Toolbox data is stored locally on the device only (MMKV). No cloud sync in MVP.
 *   **FR24:** Caregiver can delete entries from the Toolbox.
+*   **FR46:** Toolbox entries are sent as context with every AI request so the AI can reference known-good strategies, avoid redundant suggestions, and learn what types of interventions work for this specific care recipient.
 
 ### Content & Personalization
 *   **FR25:** Caregiver can upload or select photos for the Anchor Screen.

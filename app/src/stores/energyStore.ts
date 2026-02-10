@@ -1,48 +1,65 @@
 /**
  * Energy State Store
- * 
- * Manages the current energy level (0-1) and derived energy state
+ *
+ * Manages discrete energy levels (3 positions only, no intermediates).
+ * Persisted via Zustand persist middleware + MMKV.
+ *
+ * FM-3: Energy slider snaps to exactly 3 discrete positions.
  */
 
 import { create } from 'zustand';
-import { EnergyState } from '../theme/colors';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { mmkvStorage, STORAGE_KEYS } from '../utils/storage';
 
-interface EnergyStore {
-  // Current energy value (0-1 continuous)
-  energy: number;
-  
-  // Set energy level
-  setEnergy: (value: number) => void;
-  
-  // Get the discrete energy state
-  getEnergyState: () => EnergyState;
+/** Discrete energy levels — no intermediate values */
+export type EnergyLevel = 'running_low' | 'holding_steady' | 'ive_got_this';
+
+/** All valid energy levels in order (low → high) */
+export const ENERGY_LEVELS: EnergyLevel[] = [
+  'running_low',
+  'holding_steady',
+  'ive_got_this',
+];
+
+interface EnergyState {
+  /** Current discrete energy level */
+  energyLevel: EnergyLevel;
 }
+
+interface EnergyActions {
+  /** Set energy to one of the 3 discrete levels */
+  setEnergyLevel: (level: EnergyLevel) => void;
+}
+
+type EnergyStore = EnergyState & EnergyActions;
+
+export const useEnergyStore = create<EnergyStore>()(
+  persist(
+    (set) => ({
+      energyLevel: 'holding_steady',
+
+      setEnergyLevel: (level: EnergyLevel) => {
+        // Only accept valid discrete values
+        if (ENERGY_LEVELS.includes(level)) {
+          set({ energyLevel: level });
+        }
+      },
+    }),
+    {
+      name: STORAGE_KEYS.ENERGY,
+      storage: createJSONStorage(() => mmkvStorage),
+    },
+  ),
+);
+
+// Selector hooks
+export const useEnergyLevel = () =>
+  useEnergyStore((state) => state.energyLevel);
+export const useSetEnergyLevel = () =>
+  useEnergyStore((state) => state.setEnergyLevel);
 
 /**
- * Convert continuous energy (0-1) to discrete state
+ * @deprecated Use useEnergyLevel() instead. Kept temporarily for migration.
  */
-function energyToState(energy: number): EnergyState {
-  if (energy < 0.33) return 'resting';
-  if (energy < 0.66) return 'warming';
-  return 'glowing';
-}
-
-export const useEnergyStore = create<EnergyStore>((set, get) => ({
-  // Default to middle (warming state)
-  energy: 0.5,
-  
-  setEnergy: (value: number) => {
-    // Clamp between 0 and 1
-    const clamped = Math.max(0, Math.min(1, value));
-    set({ energy: clamped });
-  },
-  
-  getEnergyState: () => {
-    return energyToState(get().energy);
-  },
-}));
-
-// Selector hooks for common patterns
-export const useEnergy = () => useEnergyStore(state => state.energy);
-export const useSetEnergy = () => useEnergyStore(state => state.setEnergy);
-export const useEnergyState = () => useEnergyStore(state => energyToState(state.energy));
+export const useEnergyState = () =>
+  useEnergyStore((state) => state.energyLevel);

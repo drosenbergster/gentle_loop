@@ -1,6 +1,6 @@
 /**
  * Gentle Loop Color System
- * 
+ *
  * Based on the Sunset Gradient palette:
  * - Twilight Purple → Dusty Rose → Golden Amber
  */
@@ -20,16 +20,16 @@ export const colors = {
 
   // Energy States (for slider and tinting)
   energy: {
-    resting: '#6B5B7A',    // Twilight Purple - low energy
-    warming: '#C4A4AC',    // Dusty Rose - medium energy  
-    glowing: '#E8B87D',    // Golden Amber - higher energy
+    running_low: '#6B5B7A', // Twilight Purple - low energy
+    holding_steady: '#C4A4AC', // Dusty Rose - medium energy
+    ive_got_this: '#E8B87D', // Golden Amber - higher energy
   },
 
   // Background Tints (subtle overlays for energy states)
   tints: {
-    resting: 'rgba(107, 91, 122, 0.08)',
-    warming: 'rgba(196, 164, 172, 0.08)',
-    glowing: 'rgba(232, 184, 125, 0.08)',
+    running_low: 'rgba(107, 91, 122, 0.08)',
+    holding_steady: 'rgba(196, 164, 172, 0.08)',
+    ive_got_this: 'rgba(232, 184, 125, 0.08)',
   },
 
   // UI Elements
@@ -37,7 +37,7 @@ export const colors = {
   black: '#000000',
   overlay: 'rgba(0, 0, 0, 0.5)',
   cardBackground: '#FFFFFF',
-  
+
   // Accent (used sparingly)
   success: '#7CB69D',
   error: '#D4847C',
@@ -52,4 +52,4 @@ export const gradients = {
 
 // Type exports
 export type ColorKey = keyof typeof colors;
-export type EnergyState = 'resting' | 'warming' | 'glowing';
+export type EnergyLevel = 'running_low' | 'holding_steady' | 'ive_got_this';

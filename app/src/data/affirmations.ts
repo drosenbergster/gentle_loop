@@ -1,15 +1,17 @@
 /**
  * Affirmations
- * 
+ *
  * Gentle, rotating messages shown on the Anchor Screen.
  * Designed to validate and support without being preachy.
  * Includes breathing cues merged into the universal pool.
  */
 
+import type { EnergyLevel } from '../theme/colors';
+
 export interface Affirmation {
   id: string;
   text: string;
-  category: 'universal' | 'resting' | 'warming' | 'glowing';
+  category: 'universal' | EnergyLevel;
 }
 
 export const affirmations: Affirmation[] = [
@@ -25,26 +27,26 @@ export const affirmations: Affirmation[] = [
   { id: 'u9', text: 'You are here now. That is enough.', category: 'universal' },
   { id: 'u10', text: 'Exhale longer than you inhale. Let your body settle.', category: 'universal' },
 
-  // When Running on Empty
-  { id: 'r1', text: "It's okay to rest.", category: 'resting' },
-  { id: 'r2', text: 'Low energy days are part of this.', category: 'resting' },
-  { id: 'r3', text: "You're allowed to stop.", category: 'resting' },
-  { id: 'r4', text: 'Rest is not giving up.', category: 'resting' },
-  { id: 'r5', text: "You've already done enough today.", category: 'resting' },
+  // When Running Low
+  { id: 'r1', text: "It's okay to rest.", category: 'running_low' },
+  { id: 'r2', text: 'Low energy days are part of this.', category: 'running_low' },
+  { id: 'r3', text: "You're allowed to stop.", category: 'running_low' },
+  { id: 'r4', text: 'Rest is not giving up.', category: 'running_low' },
+  { id: 'r5', text: "You've already done enough today.", category: 'running_low' },
 
   // When Holding Steady
-  { id: 'w1', text: "You're holding steady. That takes strength.", category: 'warming' },
-  { id: 'w2', text: 'One moment at a time.', category: 'warming' },
-  { id: 'w3', text: "You're doing better than you think.", category: 'warming' },
-  { id: 'w4', text: "This is hard. And you're doing it.", category: 'warming' },
-  { id: 'w5', text: 'Small steps still count.', category: 'warming' },
+  { id: 'w1', text: "You're holding steady. That takes strength.", category: 'holding_steady' },
+  { id: 'w2', text: 'One moment at a time.', category: 'holding_steady' },
+  { id: 'w3', text: "You're doing better than you think.", category: 'holding_steady' },
+  { id: 'w4', text: "This is hard. And you're doing it.", category: 'holding_steady' },
+  { id: 'w5', text: 'Small steps still count.', category: 'holding_steady' },
 
   // When You've Got This
-  { id: 'g1', text: "You've got some capacity today. Use it wisely.", category: 'glowing' },
-  { id: 'g2', text: 'Good energy is a gift. Receive it.', category: 'glowing' },
-  { id: 'g3', text: 'Today has possibilities.', category: 'glowing' },
-  { id: 'g4', text: "There's space to breathe right now.", category: 'glowing' },
-  { id: 'g5', text: 'This is a good moment.', category: 'glowing' },
+  { id: 'g1', text: "You've got some capacity today. Use it wisely.", category: 'ive_got_this' },
+  { id: 'g2', text: 'Good energy is a gift. Receive it.', category: 'ive_got_this' },
+  { id: 'g3', text: 'Today has possibilities.', category: 'ive_got_this' },
+  { id: 'g4', text: "There's space to breathe right now.", category: 'ive_got_this' },
+  { id: 'g5', text: 'This is a good moment.', category: 'ive_got_this' },
 ];
 
 /**
@@ -53,14 +55,14 @@ export const affirmations: Affirmation[] = [
  */
 export function getRandomAffirmation(preferCategory?: Affirmation['category']): Affirmation {
   let pool = affirmations;
-  
+
   if (preferCategory) {
     // Include all universal + the preferred category
     pool = affirmations.filter(
-      a => a.category === 'universal' || a.category === preferCategory
+      (a) => a.category === 'universal' || a.category === preferCategory,
     );
   }
-  
+
   const randomIndex = Math.floor(Math.random() * pool.length);
   return pool[randomIndex];
 }

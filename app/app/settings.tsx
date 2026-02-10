@@ -1,40 +1,72 @@
 /**
  * Settings Screen
- * 
- * Personalization, accessibility, and about sections.
- * Back navigation returns to Anchor Screen.
+ *
+ * Sections in order (UX-12):
+ * 1. Energy — 3-position discrete selector
+ * 2. Toolbox — Preview of 3 most recent (full UI in Epic 4)
+ * 3. Personalization — Name, anchor image
+ * 4. AI Response — Response mode, TTS speed
+ * 5. Accessibility — Reduce motion, larger text, high contrast
+ * 6. About — Version, description
  */
 
 import { useState, useCallback } from 'react';
-import { View, StyleSheet, Pressable, ScrollView, Switch, TextInput, Image, Platform, Alert } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  ScrollView,
+  Switch,
+  TextInput,
+  Image,
+  Platform,
+  Alert,
+} from 'react-native';
 import { Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
+import * as Haptics from 'expo-haptics';
+
 import { colors, spacing, fontFamilies, fontSizes } from '../src/theme';
-import { useSettingsStore } from '../src/stores';
+import {
+  useSettingsStore,
+  useEnergyStore,
+  useToolboxStore,
+  type EnergyLevel,
+  ENERGY_LEVELS,
+} from '../src/stores';
+import type { ResponseMode, TTSSpeed } from '../src/stores/settingsStore';
 import { useAccessibility } from '../src/hooks';
 
-// Anchor image options (same as onboarding)
+// --- Constants ---
+
 const ANCHOR_OPTIONS = [
-  {
-    key: 'default-mountains',
-    label: 'Mountains',
-    source: require('../assets/images/mountains.jpg'),
-  },
-  {
-    key: 'default-water',
-    label: 'Water',
-    source: require('../assets/images/water.jpg'),
-  },
-  {
-    key: 'default-sunset',
-    label: 'Sunset',
-    source: require('../assets/images/sunset.jpg'),
-  },
+  { key: 'default-mountains', label: 'Mountains', source: require('../assets/images/mountains.jpg') },
+  { key: 'default-water', label: 'Water', source: require('../assets/images/water.jpg') },
+  { key: 'default-sunset', label: 'Sunset', source: require('../assets/images/sunset.jpg') },
 ];
 
-// Toggle row component (accepts optional scaled styles)
+const ENERGY_LABELS: Record<EnergyLevel, string> = {
+  running_low: 'Running low',
+  holding_steady: 'Holding steady',
+  ive_got_this: "I've got this",
+};
+
+const RESPONSE_MODE_OPTIONS: { value: ResponseMode; label: string }[] = [
+  { value: 'text', label: 'Text' },
+  { value: 'both', label: 'Both' },
+  { value: 'audio', label: 'Audio' },
+];
+
+const TTS_SPEED_OPTIONS: { value: TTSSpeed; label: string }[] = [
+  { value: 'slower', label: 'Slower' },
+  { value: 'default', label: 'Default' },
+  { value: 'faster', label: 'Faster' },
+];
+
+// --- Shared Components ---
+
 function ToggleRow({
   label,
   description,
@@ -66,31 +98,87 @@ function ToggleRow({
   );
 }
 
-const rowStyles = StyleSheet.create({
+/** Segmented control for selecting from discrete options */
+function SegmentedControl<T extends string>({
+  options,
+  value,
+  onChange,
+  labelStyle,
+}: {
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (val: T) => void;
+  labelStyle?: any;
+}) {
+  return (
+    <View style={segmentStyles.container}>
+      {options.map((option) => {
+        const isSelected = option.value === value;
+        return (
+          <Pressable
+            key={option.value}
+            style={[
+              segmentStyles.option,
+              isSelected && segmentStyles.optionSelected,
+            ]}
+            onPress={() => onChange(option.value)}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: isSelected }}
+            accessibilityLabel={option.label}
+          >
+            <Text
+              style={[
+                segmentStyles.optionText,
+                isSelected && segmentStyles.optionTextSelected,
+                labelStyle,
+              ]}
+            >
+              {option.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+const segmentStyles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.lg,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(0,0,0,0.06)',
+    backgroundColor: colors.softGray,
+    borderRadius: 12,
+    padding: 3,
   },
-  textColumn: {
+  option: {
     flex: 1,
-    marginRight: spacing.lg,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.sm,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
   },
-  label: {
+  optionSelected: {
+    backgroundColor: colors.white,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  optionText: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.sm,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  optionTextSelected: {
     fontFamily: fontFamilies.medium,
-    fontSize: fontSizes.base,
     color: colors.textPrimary,
   },
-  description: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.xs,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
 });
+
+// --- Main Screen ---
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -98,25 +186,43 @@ export default function SettingsScreen() {
   const { scale, textColor } = useAccessibility();
 
   // Settings store
-  const userName = useSettingsStore(state => state.userName);
-  const anchorImage = useSettingsStore(state => state.anchorImage);
-  const reduceMotion = useSettingsStore(state => state.reduceMotion);
-  const largerText = useSettingsStore(state => state.largerText);
-  const highContrast = useSettingsStore(state => state.highContrast);
+  const userName = useSettingsStore((s) => s.userName);
+  const anchorImage = useSettingsStore((s) => s.anchorImage);
+  const reduceMotion = useSettingsStore((s) => s.reduceMotion);
+  const largerText = useSettingsStore((s) => s.largerText);
+  const highContrast = useSettingsStore((s) => s.highContrast);
+  const responseMode = useSettingsStore((s) => s.responseMode);
+  const ttsSpeed = useSettingsStore((s) => s.ttsSpeed);
 
-  const setUserName = useSettingsStore(state => state.setUserName);
-  const setAnchorImage = useSettingsStore(state => state.setAnchorImage);
-  const setReduceMotion = useSettingsStore(state => state.setReduceMotion);
-  const setLargerText = useSettingsStore(state => state.setLargerText);
-  const setHighContrast = useSettingsStore(state => state.setHighContrast);
+  const setUserName = useSettingsStore((s) => s.setUserName);
+  const setAnchorImage = useSettingsStore((s) => s.setAnchorImage);
+  const setReduceMotion = useSettingsStore((s) => s.setReduceMotion);
+  const setLargerText = useSettingsStore((s) => s.setLargerText);
+  const setHighContrast = useSettingsStore((s) => s.setHighContrast);
+  const setResponseMode = useSettingsStore((s) => s.setResponseMode);
+  const setTTSSpeed = useSettingsStore((s) => s.setTTSSpeed);
 
-  // Local state for name editing
+  // Energy store
+  const energyLevel = useEnergyStore((s) => s.energyLevel);
+  const setEnergyLevel = useEnergyStore((s) => s.setEnergyLevel);
+
+  // Toolbox store (preview only)
+  const toolboxEntries = useToolboxStore((s) => s.entries);
+  const recentToolbox = toolboxEntries.slice(-3).reverse(); // 3 most recent, newest first
+
+  // Local state
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(userName);
 
   // Dynamic accessibility styles
-  const labelA11y = { fontSize: scale(fontSizes.base), color: textColor('textPrimary') };
-  const descA11y = { fontSize: scale(fontSizes.xs), color: textColor('textMuted') };
+  const labelA11y = {
+    fontSize: scale(fontSizes.base),
+    color: textColor('textPrimary'),
+  };
+  const descA11y = {
+    fontSize: scale(fontSizes.xs),
+    color: textColor('textMuted'),
+  };
 
   const handleBack = useCallback(() => {
     if (router.canGoBack()) {
@@ -131,13 +237,21 @@ export default function SettingsScreen() {
     setEditingName(false);
   };
 
+  const handleEnergyChange = useCallback(
+    (level: EnergyLevel) => {
+      setEnergyLevel(level);
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    },
+    [setEnergyLevel],
+  );
+
   const handlePickPhoto = useCallback(async () => {
-    // Request permission
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const { status } =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      if (Platform.OS === 'web') {
-        // Web doesn't need permissions, proceed anyway
-      } else {
+      if (Platform.OS !== 'web') {
         Alert.alert(
           'Permission needed',
           'Please allow photo access to choose your own anchor image.',
@@ -158,6 +272,14 @@ export default function SettingsScreen() {
     }
   }, [setAnchorImage]);
 
+  const formatDate = (isoString: string): string => {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
@@ -170,7 +292,17 @@ export default function SettingsScreen() {
         >
           <Text style={styles.backArrow}>←</Text>
         </Pressable>
-        <Text style={[styles.headerTitle, { fontSize: scale(fontSizes.lg), color: textColor('textPrimary') }]}>Settings</Text>
+        <Text
+          style={[
+            styles.headerTitle,
+            {
+              fontSize: scale(fontSizes.lg),
+              color: textColor('textPrimary'),
+            },
+          ]}
+        >
+          Settings
+        </Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -182,8 +314,125 @@ export default function SettingsScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* PERSONALIZATION */}
-        <Text style={[styles.sectionHeader, { fontSize: scale(fontSizes.xs), color: textColor('textMuted') }]}>PERSONALIZATION</Text>
+        {/* 1. YOUR ENERGY */}
+        <Text
+          style={[
+            styles.sectionHeader,
+            styles.sectionHeaderFirst,
+            { fontSize: scale(fontSizes.xs), color: textColor('textMuted') },
+          ]}
+        >
+          YOUR ENERGY
+        </Text>
+        <View style={styles.section}>
+          <View style={styles.energySection}>
+            <View style={styles.energySelector}>
+              {ENERGY_LEVELS.map((level) => {
+                const isSelected = level === energyLevel;
+                return (
+                  <Pressable
+                    key={level}
+                    style={[
+                      styles.energyOption,
+                      isSelected && {
+                        backgroundColor: colors.energy[level],
+                      },
+                    ]}
+                    onPress={() => handleEnergyChange(level)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: isSelected }}
+                    accessibilityLabel={`Energy: ${ENERGY_LABELS[level]}`}
+                  >
+                    <Text
+                      style={[
+                        styles.energyOptionText,
+                        { fontSize: scale(fontSizes.sm) },
+                        isSelected && styles.energyOptionTextSelected,
+                      ]}
+                    >
+                      {ENERGY_LABELS[level]}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Text
+              style={[
+                styles.energyHelper,
+                { fontSize: scale(fontSizes.xs), color: textColor('textMuted') },
+              ]}
+            >
+              Helps the AI adjust its tone. Set whenever you think to.
+            </Text>
+          </View>
+        </View>
+
+        {/* 2. TOOLBOX (Preview) */}
+        <Text
+          style={[
+            styles.sectionHeader,
+            { fontSize: scale(fontSizes.xs), color: textColor('textMuted') },
+          ]}
+        >
+          TOOLBOX
+        </Text>
+        <View style={styles.section}>
+          {recentToolbox.length === 0 ? (
+            <View style={styles.toolboxEmpty}>
+              <Text
+                style={[
+                  styles.toolboxEmptyText,
+                  { fontSize: scale(fontSizes.sm), color: textColor('textMuted') },
+                ]}
+              >
+                Strategies you mark as "That worked" will appear here.
+              </Text>
+            </View>
+          ) : (
+            <>
+              {recentToolbox.map((entry) => (
+                <View key={entry.id} style={rowStyles.container}>
+                  <View style={rowStyles.textColumn}>
+                    <Text
+                      style={[rowStyles.label, labelA11y]}
+                      numberOfLines={2}
+                    >
+                      "{entry.suggestionText}"
+                    </Text>
+                    <Text style={[rowStyles.description, descA11y]}>
+                      Saved {formatDate(entry.savedAt)}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+              <Pressable
+                style={styles.viewAllButton}
+                onPress={() => router.push('/toolbox')}
+                accessibilityRole="button"
+                accessibilityLabel={`View all ${toolboxEntries.length} Toolbox entries`}
+              >
+                <Text
+                  style={[
+                    styles.viewAllText,
+                    { fontSize: scale(fontSizes.sm) },
+                  ]}
+                >
+                  View All ({toolboxEntries.length}) →
+                </Text>
+              </Pressable>
+            </>
+          )}
+        </View>
+
+        {/* 3. PERSONALIZATION */}
+        <Text
+          style={[
+            styles.sectionHeader,
+            { fontSize: scale(fontSizes.xs), color: textColor('textMuted') },
+          ]}
+        >
+          PERSONALIZATION
+        </Text>
         <View style={styles.section}>
           {/* Name */}
           <View style={rowStyles.container}>
@@ -191,7 +440,13 @@ export default function SettingsScreen() {
               <Text style={[rowStyles.label, labelA11y]}>Your Name</Text>
               {editingName ? (
                 <TextInput
-                  style={[styles.nameInput, { fontSize: scale(fontSizes.sm), color: textColor('textPrimary') }]}
+                  style={[
+                    styles.nameInput,
+                    {
+                      fontSize: scale(fontSizes.sm),
+                      color: textColor('textPrimary'),
+                    },
+                  ]}
                   value={nameValue}
                   onChangeText={setNameValue}
                   placeholder="Enter your name"
@@ -214,10 +469,15 @@ export default function SettingsScreen() {
                   setNameValue(userName);
                   setEditingName(true);
                 }}
+                style={styles.editTapTarget}
                 accessibilityRole="button"
                 accessibilityLabel="Edit name"
               >
-                <Text style={[styles.editButton, { fontSize: scale(fontSizes.sm) }]}>Edit</Text>
+                <Text
+                  style={[styles.editButton, { fontSize: scale(fontSizes.sm) }]}
+                >
+                  Edit
+                </Text>
               </Pressable>
             )}
           </View>
@@ -225,7 +485,13 @@ export default function SettingsScreen() {
           {/* Anchor Image */}
           <View style={styles.anchorSection}>
             <Text style={[rowStyles.label, labelA11y]}>Anchor Image</Text>
-            <Text style={[rowStyles.description, descA11y, { marginBottom: spacing.md }]}>
+            <Text
+              style={[
+                rowStyles.description,
+                descA11y,
+                { marginBottom: spacing.md },
+              ]}
+            >
               This image greets you every time you open the app.
             </Text>
             <View style={styles.imageRow}>
@@ -246,18 +512,25 @@ export default function SettingsScreen() {
                     ]}
                     resizeMode="cover"
                   />
-                  <Text style={[
-                    styles.imageLabel,
-                    { fontSize: scale(fontSizes.xs), color: textColor('textMuted') },
-                    anchorImage === option.key && styles.imageLabelSelected,
-                    anchorImage === option.key && { color: textColor('textPrimary') },
-                  ]}>
+                  <Text
+                    style={[
+                      styles.imageLabel,
+                      {
+                        fontSize: scale(fontSizes.xs),
+                        color: textColor('textMuted'),
+                      },
+                      anchorImage === option.key && styles.imageLabelSelected,
+                      anchorImage === option.key && {
+                        color: textColor('textPrimary'),
+                      },
+                    ]}
+                  >
                     {option.label}
                   </Text>
                 </Pressable>
               ))}
 
-              {/* Custom photo option */}
+              {/* Custom photo */}
               <Pressable
                 onPress={handlePickPhoto}
                 style={styles.imageOption}
@@ -275,12 +548,22 @@ export default function SettingsScreen() {
                     <Text style={styles.addPhotoIcon}>+</Text>
                   </View>
                 )}
-                <Text style={[
-                  styles.imageLabel,
-                  { fontSize: scale(fontSizes.xs), color: textColor('textMuted') },
-                  anchorImage && !anchorImage.startsWith('default-') && styles.imageLabelSelected,
-                  anchorImage && !anchorImage.startsWith('default-') && { color: textColor('textPrimary') },
-                ]}>
+                <Text
+                  style={[
+                    styles.imageLabel,
+                    {
+                      fontSize: scale(fontSizes.xs),
+                      color: textColor('textMuted'),
+                    },
+                    anchorImage &&
+                      !anchorImage.startsWith('default-') &&
+                      styles.imageLabelSelected,
+                    anchorImage &&
+                      !anchorImage.startsWith('default-') && {
+                        color: textColor('textPrimary'),
+                      },
+                  ]}
+                >
                   Your photo
                 </Text>
               </Pressable>
@@ -288,8 +571,51 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* ACCESSIBILITY */}
-        <Text style={[styles.sectionHeader, { fontSize: scale(fontSizes.xs), color: textColor('textMuted') }]}>ACCESSIBILITY</Text>
+        {/* 4. AI RESPONSE */}
+        <Text
+          style={[
+            styles.sectionHeader,
+            { fontSize: scale(fontSizes.xs), color: textColor('textMuted') },
+          ]}
+        >
+          AI RESPONSE
+        </Text>
+        <View style={styles.section}>
+          <View style={styles.aiRow}>
+            <Text style={[rowStyles.label, labelA11y]}>Response Mode</Text>
+            <Text style={[rowStyles.description, descA11y, { marginBottom: spacing.md }]}>
+              How the AI delivers suggestions
+            </Text>
+            <SegmentedControl
+              options={RESPONSE_MODE_OPTIONS}
+              value={responseMode}
+              onChange={setResponseMode}
+              labelStyle={{ fontSize: scale(fontSizes.sm) }}
+            />
+          </View>
+          <View style={[styles.aiRow, { borderBottomWidth: 0 }]}>
+            <Text style={[rowStyles.label, labelA11y]}>Speech Speed</Text>
+            <Text style={[rowStyles.description, descA11y, { marginBottom: spacing.md }]}>
+              How fast the AI reads suggestions aloud
+            </Text>
+            <SegmentedControl
+              options={TTS_SPEED_OPTIONS}
+              value={ttsSpeed}
+              onChange={setTTSSpeed}
+              labelStyle={{ fontSize: scale(fontSizes.sm) }}
+            />
+          </View>
+        </View>
+
+        {/* 5. ACCESSIBILITY */}
+        <Text
+          style={[
+            styles.sectionHeader,
+            { fontSize: scale(fontSizes.xs), color: textColor('textMuted') },
+          ]}
+        >
+          ACCESSIBILITY
+        </Text>
         <View style={styles.section}>
           <ToggleRow
             label="Reduce Motion"
@@ -317,12 +643,26 @@ export default function SettingsScreen() {
           />
         </View>
 
-        {/* ABOUT */}
-        <Text style={[styles.sectionHeader, { fontSize: scale(fontSizes.xs), color: textColor('textMuted') }]}>ABOUT</Text>
+        {/* 6. ABOUT */}
+        <Text
+          style={[
+            styles.sectionHeader,
+            { fontSize: scale(fontSizes.xs), color: textColor('textMuted') },
+          ]}
+        >
+          ABOUT
+        </Text>
         <View style={styles.section}>
           <View style={rowStyles.container}>
             <Text style={[rowStyles.label, labelA11y]}>Version</Text>
-            <Text style={[styles.versionText, { fontSize: scale(fontSizes.sm), color: textColor('textMuted') }]}>1.0.0</Text>
+            <Text
+              style={[
+                styles.versionText,
+                { fontSize: scale(fontSizes.sm), color: textColor('textMuted') },
+              ]}
+            >
+              1.0.0
+            </Text>
           </View>
           <View style={[rowStyles.container, { borderBottomWidth: 0 }]}>
             <View style={rowStyles.textColumn}>
@@ -338,6 +678,34 @@ export default function SettingsScreen() {
   );
 }
 
+// --- Styles ---
+
+const rowStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.lg,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0,0,0,0.06)',
+  },
+  textColumn: {
+    flex: 1,
+    marginRight: spacing.lg,
+  },
+  label: {
+    fontFamily: fontFamilies.medium,
+    fontSize: fontSizes.base,
+    color: colors.textPrimary,
+  },
+  description: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.xs,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+});
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -352,8 +720,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -369,7 +737,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   headerSpacer: {
-    width: 40,
+    width: 44,
   },
 
   // -- Scroll --
@@ -389,11 +757,74 @@ const styles = StyleSheet.create({
     marginTop: spacing.xxl,
     marginBottom: spacing.sm,
   },
+  sectionHeaderFirst: {
+    marginTop: spacing.lg,
+  },
   section: {
     backgroundColor: colors.white,
     borderRadius: 16,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.xs,
+  },
+
+  // -- Energy --
+  energySection: {
+    paddingVertical: spacing.lg,
+  },
+  energySelector: {
+    flexDirection: 'row',
+    backgroundColor: colors.softGray,
+    borderRadius: 12,
+    padding: 3,
+  },
+  energyOption: {
+    flex: 1,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.xs,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  energyOptionText: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.sm,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  energyOptionTextSelected: {
+    fontFamily: fontFamilies.medium,
+    color: colors.white,
+  },
+  energyHelper: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.xs,
+    color: colors.textMuted,
+    marginTop: spacing.md,
+    textAlign: 'center',
+  },
+
+  // -- Toolbox preview --
+  toolboxEmpty: {
+    paddingVertical: spacing.xl,
+    alignItems: 'center',
+  },
+  toolboxEmptyText: {
+    fontFamily: fontFamilies.light,
+    fontSize: fontSizes.sm,
+    color: colors.textMuted,
+    textAlign: 'center',
+  },
+  viewAllButton: {
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  viewAllText: {
+    fontFamily: fontFamilies.medium,
+    fontSize: fontSizes.sm,
+    color: colors.dustyRose,
   },
 
   // -- Name editing --
@@ -409,10 +840,23 @@ const styles = StyleSheet.create({
       web: { outlineStyle: 'none' as any },
     }),
   },
+  editTapTarget: {
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   editButton: {
     fontFamily: fontFamilies.medium,
     fontSize: fontSizes.sm,
     color: colors.dustyRose,
+  },
+
+  // -- AI Response --
+  aiRow: {
+    paddingVertical: spacing.lg,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0,0,0,0.06)',
   },
 
   // -- Anchor image picker --

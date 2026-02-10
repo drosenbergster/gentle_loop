@@ -8,7 +8,11 @@
       "@components/*": ["src/components/*"],
       "@stores/*": ["src/stores/*"],
       "@theme/*": ["src/theme/*"],
-      "@data/*": ["src/data/*"]
+      "@data/*": ["src/data/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@services/*": ["src/services/*"],
+      "@types/*": ["src/types/*"],
+      "@utils/*": ["src/utils/*"]
     }
   },
   "include": [

@@ -1,10 +1,12 @@
 /**
  * Energy Slider
- * 
+ *
  * A vertical gradient slider for checking in on energy levels.
  * Sunset gradient: Twilight Purple (low) → Dusty Rose → Golden Amber (high)
- * 
- * Shows permanent labels alongside the track:
+ *
+ * FM-3: Snaps to exactly 3 discrete positions — no intermediate values.
+ *
+ * Labels alongside the track:
  * - "I've got this" (top)
  * - "Holding steady" (middle)
  * - "Running low" (bottom)
@@ -24,7 +26,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 
 import { colors, spacing, fontFamilies } from '../theme';
-import { useEnergyStore } from '../stores';
+import { useEnergyStore, type EnergyLevel } from '../stores';
 import { useAccessibility } from '../hooks';
 
 // Slider dimensions
@@ -32,12 +34,34 @@ const SLIDER_HEIGHT = 160;
 const SLIDER_WIDTH = 44;
 const THUMB_SIZE = 26;
 
-// Energy level labels (bottom to top)
-const ENERGY_LABELS = [
-  { label: 'Running low', position: 0.15 },
-  { label: 'Holding steady', position: 0.5 },
-  { label: "I've got this", position: 0.85 },
+// Discrete snap positions (normalized 0-1, bottom to top)
+const SNAP_POSITIONS: { level: EnergyLevel; position: number; label: string }[] = [
+  { level: 'running_low', position: 0.15, label: 'Running low' },
+  { level: 'holding_steady', position: 0.5, label: 'Holding steady' },
+  { level: 'ive_got_this', position: 0.85, label: "I've got this" },
 ];
+
+/** Map energy level to its normalized position on the track */
+function levelToPosition(level: EnergyLevel): number {
+  const snap = SNAP_POSITIONS.find((s) => s.level === level);
+  return snap?.position ?? 0.5;
+}
+
+/** Find the nearest snap level for a given position */
+function positionToLevel(position: number): EnergyLevel {
+  let closest = SNAP_POSITIONS[0];
+  let minDist = Math.abs(position - closest.position);
+
+  for (const snap of SNAP_POSITIONS) {
+    const dist = Math.abs(position - snap.position);
+    if (dist < minDist) {
+      minDist = dist;
+      closest = snap;
+    }
+  }
+
+  return closest.level;
+}
 
 // Web-compatible shadow helper
 const createShadow = (offsetY: number, radius: number, opacity: number) => {
@@ -61,25 +85,39 @@ interface EnergySliderProps {
 }
 
 export function EnergySlider({ overlay = false }: EnergySliderProps) {
-  const energy = useEnergyStore(state => state.energy);
-  const setEnergy = useEnergyStore(state => state.setEnergy);
+  const energyLevel = useEnergyStore((state) => state.energyLevel);
+  const setEnergyLevel = useEnergyStore((state) => state.setEnergyLevel);
   const { scale, textColor } = useAccessibility();
-  
-  // Shared value for smooth animation
-  const thumbPosition = useSharedValue(energy);
-  
+
+  // Shared value for smooth animation — maps to normalized position
+  const thumbPosition = useSharedValue(levelToPosition(energyLevel));
+
   // Track gesture state
   const isActive = useSharedValue(false);
 
-  const updateEnergy = useCallback((value: number) => {
-    setEnergy(value);
-  }, [setEnergy]);
+  const updateEnergy = useCallback(
+    (level: EnergyLevel) => {
+      setEnergyLevel(level);
+    },
+    [setEnergyLevel],
+  );
 
   const triggerHaptic = useCallback(() => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   }, []);
+
+  const snapToNearest = useCallback(
+    (rawPosition: number) => {
+      const level = positionToLevel(rawPosition);
+      const snapPos = levelToPosition(level);
+      thumbPosition.value = withSpring(snapPos, { damping: 15, stiffness: 150 });
+      updateEnergy(level);
+      triggerHaptic();
+    },
+    [updateEnergy, triggerHaptic, thumbPosition],
+  );
 
   const panGesture = Gesture.Pan()
     .onBegin(() => {
@@ -88,42 +126,39 @@ export function EnergySlider({ overlay = false }: EnergySliderProps) {
     })
     .onUpdate((event) => {
       const clampedY = Math.max(0, Math.min(SLIDER_HEIGHT, event.y));
-      const newValue = 1 - (clampedY / SLIDER_HEIGHT);
-      thumbPosition.value = newValue;
-      runOnJS(updateEnergy)(newValue);
+      const rawPosition = 1 - clampedY / SLIDER_HEIGHT;
+      thumbPosition.value = rawPosition;
     })
-    .onEnd(() => {
+    .onEnd((event) => {
       isActive.value = false;
-      runOnJS(triggerHaptic)();
+      const clampedY = Math.max(0, Math.min(SLIDER_HEIGHT, event.y));
+      const rawPosition = 1 - clampedY / SLIDER_HEIGHT;
+      runOnJS(snapToNearest)(rawPosition);
     });
 
   const thumbStyle = useAnimatedStyle(() => {
     const positionFromBottom = thumbPosition.value * SLIDER_HEIGHT;
-    const scale = isActive.value ? 1.15 : 1;
-    
+    const thumbScale = isActive.value ? 1.15 : 1;
+
     return {
       bottom: positionFromBottom - THUMB_SIZE / 2,
-      transform: [{ scale: withSpring(scale, { damping: 15 }) }],
+      transform: [{ scale: withSpring(thumbScale, { damping: 15 }) }],
     };
   });
 
-  // Determine which label is currently active based on energy
-  const getActiveIndex = () => {
-    if (energy < 0.33) return 0;
-    if (energy < 0.66) return 1;
-    return 2;
-  };
-
-  const activeIndex = getActiveIndex();
+  // Determine which label is currently active
+  const activeIndex = SNAP_POSITIONS.findIndex((s) => s.level === energyLevel);
 
   return (
     <View style={styles.container}>
       {/* "Your energy" context label */}
-      <Text style={[
-        styles.contextLabel,
-        overlay && styles.contextLabelOverlay,
-        !overlay && { color: textColor('textMuted'), fontSize: scale(12) },
-      ]}>
+      <Text
+        style={[
+          styles.contextLabel,
+          overlay && styles.contextLabelOverlay,
+          !overlay && { color: textColor('textMuted'), fontSize: scale(12) },
+        ]}
+      >
         Your energy
       </Text>
 
@@ -132,17 +167,15 @@ export function EnergySlider({ overlay = false }: EnergySliderProps) {
         <GestureDetector gesture={panGesture}>
           <View style={styles.sliderContainer}>
             {/* Frosted backing for overlay mode */}
-            {overlay && (
-              <View style={styles.frostedBacking} />
-            )}
-            
+            {overlay && <View style={styles.frostedBacking} />}
+
             <LinearGradient
               colors={[colors.goldenAmber, colors.dustyRose, colors.twilightPurple]}
               style={styles.track}
               start={{ x: 0.5, y: 0 }}
               end={{ x: 0.5, y: 1 }}
             />
-            
+
             {/* Thumb */}
             <Animated.View style={[styles.thumb, thumbStyle]}>
               <View style={styles.thumbInner} />
@@ -152,20 +185,20 @@ export function EnergySlider({ overlay = false }: EnergySliderProps) {
 
         {/* Permanent labels alongside track */}
         <View style={styles.labelsColumn}>
-          {[...ENERGY_LABELS].reverse().map((item, index) => {
-            const labelIndex = ENERGY_LABELS.length - 1 - index;
-            const isActive = labelIndex === activeIndex;
+          {[...SNAP_POSITIONS].reverse().map((item, index) => {
+            const labelIndex = SNAP_POSITIONS.length - 1 - index;
+            const isActiveLabel = labelIndex === activeIndex;
             return (
               <Text
-                key={item.label}
+                key={item.level}
                 style={[
                   styles.levelLabel,
                   overlay && styles.levelLabelOverlay,
-                  isActive && styles.levelLabelActive,
-                  isActive && overlay && styles.levelLabelActiveOverlay,
+                  isActiveLabel && styles.levelLabelActive,
+                  isActiveLabel && overlay && styles.levelLabelActiveOverlay,
                   !overlay && { fontSize: scale(12) },
-                  !overlay && isActive && { color: textColor('textSecondary') },
-                  !overlay && !isActive && { color: textColor('textMuted') },
+                  !overlay && isActiveLabel && { color: textColor('textSecondary') },
+                  !overlay && !isActiveLabel && { color: textColor('textMuted') },
                 ]}
               >
                 {item.label}

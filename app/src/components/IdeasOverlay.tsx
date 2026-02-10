@@ -1,11 +1,13 @@
 /**
- * Ideas Overlay
- * 
- * Displays contextual ideas matched to energy state.
- * Validates first, then offers actionable guidance.
+ * Gentle Ideas Overlay
+ *
+ * Displays curated ideas matched to energy level when offline.
+ * WAR-6: Same card container as AI suggestion cards.
+ * WAR-7: Two actions: "Something else" + "That helps".
+ * FM-10: IdeaCycler reshuffles when pool exhausted.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { View, StyleSheet, Pressable, Modal, Platform } from 'react-native';
 import { Text } from 'react-native-paper';
 import Animated, {
@@ -17,9 +19,9 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 
 import { colors, spacing, fontFamilies, borderRadius } from '../theme';
-import { useEnergyState, useSettingsStore } from '../stores';
+import { useEnergyLevel, useSettingsStore, useToolboxStore } from '../stores';
 import { useAccessibility } from '../hooks';
-import { getRandomIdea, getNextIdea, Idea } from '../data';
+import { IdeaCycler, type Idea } from '../data';
 
 // Web-compatible shadow helper
 const createShadow = (offsetY: number, radius: number, opacity: number) => {
@@ -43,12 +45,14 @@ interface IdeasOverlayProps {
 }
 
 export function IdeasOverlay({ visible, onClose }: IdeasOverlayProps) {
-  const energyState = useEnergyState();
-  const reduceMotion = useSettingsStore(state => state.reduceMotion);
+  const energyLevel = useEnergyLevel();
+  const reduceMotion = useSettingsStore((state) => state.reduceMotion);
+  const addToolboxEntry = useToolboxStore((state) => state.addEntry);
   const { scale, textColor } = useAccessibility();
-  
+
   const [currentIdea, setCurrentIdea] = useState<Idea | null>(null);
-  
+  const cyclerRef = useRef(new IdeaCycler(energyLevel));
+
   // Animation values
   const overlayOpacity = useSharedValue(0);
   const cardTranslateY = useSharedValue(300);
@@ -56,51 +60,57 @@ export function IdeasOverlay({ visible, onClose }: IdeasOverlayProps) {
   // Handle visibility changes
   useEffect(() => {
     if (visible) {
-      const idea = getRandomIdea(energyState);
+      const idea = cyclerRef.current.next(energyLevel);
       setCurrentIdea(idea);
-      
-      // Animate in
+
       overlayOpacity.value = withTiming(1, { duration: 200 });
       cardTranslateY.value = withSpring(0, {
         damping: reduceMotion ? 20 : 15,
         stiffness: reduceMotion ? 150 : 100,
       });
     } else {
-      // Reset for next open
       overlayOpacity.value = withTiming(0, { duration: 150 });
       cardTranslateY.value = withTiming(300, { duration: 200 });
     }
-  }, [visible, energyState, reduceMotion]);
+  }, [visible, energyLevel, reduceMotion]);
 
-  const triggerHaptic = useCallback((style: 'light' | 'medium') => {
-    if (Platform.OS !== 'web') {
-      const feedbackStyle = style === 'light' 
-        ? Haptics.ImpactFeedbackStyle.Light 
-        : Haptics.ImpactFeedbackStyle.Medium;
-      Haptics.impactAsync(feedbackStyle);
-    }
-  }, []);
+  const triggerHaptic = useCallback(
+    (style: 'light' | 'medium') => {
+      if (Platform.OS !== 'web') {
+        const feedbackStyle =
+          style === 'light'
+            ? Haptics.ImpactFeedbackStyle.Light
+            : Haptics.ImpactFeedbackStyle.Medium;
+        Haptics.impactAsync(feedbackStyle);
+      }
+    },
+    [],
+  );
 
   const handleSomethingElse = useCallback(() => {
     triggerHaptic('light');
-    
-    // Get a different idea
-    const nextIdea = getNextIdea(energyState, currentIdea?.id);
+
+    const nextIdea = cyclerRef.current.next(energyLevel);
     setCurrentIdea(nextIdea);
-    
-    // Quick bounce animation
+
     if (!reduceMotion) {
       cardTranslateY.value = withSpring(20, { damping: 20, stiffness: 300 });
       setTimeout(() => {
         cardTranslateY.value = withSpring(0, { damping: 15, stiffness: 100 });
       }, 100);
     }
-  }, [energyState, currentIdea, reduceMotion, triggerHaptic]);
+  }, [energyLevel, reduceMotion, triggerHaptic]);
 
   const handleThatHelps = useCallback(() => {
     triggerHaptic('medium');
+
+    // Save to Toolbox (AC-6)
+    if (currentIdea) {
+      addToolboxEntry(`${currentIdea.title}: ${currentIdea.content}`);
+    }
+
     onClose();
-  }, [onClose, triggerHaptic]);
+  }, [onClose, triggerHaptic, currentIdea, addToolboxEntry]);
 
   const handleBackdropPress = useCallback(() => {
     onClose();
@@ -127,8 +137,8 @@ export function IdeasOverlay({ visible, onClose }: IdeasOverlayProps) {
       <View style={styles.container}>
         {/* Backdrop */}
         <Animated.View style={[styles.backdrop, overlayStyle]}>
-          <Pressable 
-            style={StyleSheet.absoluteFill} 
+          <Pressable
+            style={StyleSheet.absoluteFill}
             onPress={handleBackdropPress}
             accessibilityRole="button"
             accessibilityLabel="Close ideas"
@@ -137,22 +147,48 @@ export function IdeasOverlay({ visible, onClose }: IdeasOverlayProps) {
 
         {/* Card */}
         <Animated.View style={[styles.card, cardStyle]}>
+          {/* Drag indicator */}
+          <View style={styles.dragIndicator} />
+
           {/* Validation */}
-          <Text style={[styles.validation, { fontSize: scale(15), lineHeight: scale(22), color: textColor('textSecondary') }]}>
+          <Text
+            style={[
+              styles.validation,
+              {
+                fontSize: scale(15),
+                lineHeight: scale(22),
+                color: textColor('textSecondary'),
+              },
+            ]}
+          >
             "{currentIdea.validation}"
           </Text>
-          
+
           {/* Title */}
-          <Text style={[styles.title, { fontSize: scale(22), color: textColor('textPrimary') }]}>
+          <Text
+            style={[
+              styles.title,
+              { fontSize: scale(22), color: textColor('textPrimary') },
+            ]}
+          >
             {currentIdea.title}
           </Text>
-          
+
           {/* Content */}
-          <Text style={[styles.content, { fontSize: scale(16), lineHeight: scale(26), color: textColor('textPrimary') }]}>
+          <Text
+            style={[
+              styles.content,
+              {
+                fontSize: scale(16),
+                lineHeight: scale(26),
+                color: textColor('textPrimary'),
+              },
+            ]}
+          >
             {currentIdea.content}
           </Text>
-          
-          {/* Actions */}
+
+          {/* Actions (WAR-7) */}
           <View style={styles.actions}>
             <Pressable
               style={({ pressed }) => [
@@ -163,9 +199,13 @@ export function IdeasOverlay({ visible, onClose }: IdeasOverlayProps) {
               accessibilityRole="button"
               accessibilityLabel="Something else"
             >
-              <Text style={[styles.secondaryButtonText, { fontSize: scale(15) }]}>Something else</Text>
+              <Text
+                style={[styles.secondaryButtonText, { fontSize: scale(15) }]}
+              >
+                Something else
+              </Text>
             </Pressable>
-            
+
             <Pressable
               style={({ pressed }) => [
                 styles.primaryButton,
@@ -175,7 +215,11 @@ export function IdeasOverlay({ visible, onClose }: IdeasOverlayProps) {
               accessibilityRole="button"
               accessibilityLabel="That helps"
             >
-              <Text style={[styles.primaryButtonText, { fontSize: scale(15) }]}>That helps</Text>
+              <Text
+                style={[styles.primaryButtonText, { fontSize: scale(15) }]}
+              >
+                That helps
+              </Text>
             </Pressable>
           </View>
         </Animated.View>
@@ -201,6 +245,14 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     maxHeight: '80%',
     ...createShadow(-4, 16, 0.15),
+  },
+  dragIndicator: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.softGray,
+    alignSelf: 'center',
+    marginBottom: spacing.lg,
   },
   validation: {
     fontFamily: fontFamilies.light,
@@ -234,6 +286,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colors.dustyRose,
     alignItems: 'center',
+    minHeight: 44,
+    justifyContent: 'center',
   },
   primaryButton: {
     flex: 1,
@@ -241,6 +295,8 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.full,
     backgroundColor: colors.dustyRose,
     alignItems: 'center',
+    minHeight: 44,
+    justifyContent: 'center',
   },
   buttonPressed: {
     opacity: 0.85,

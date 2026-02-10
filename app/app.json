@@ -17,7 +17,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.gentleloop.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSMicrophoneUsageDescription": "gentle_loop uses your microphone to understand what you need help with. Audio is never stored.",
+        "NSSpeechRecognitionUsageDescription": "Allow gentle_loop to convert your voice to text for AI guidance."
       }
     },
     "android": {
@@ -34,7 +36,15 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "gentle_loop uses your microphone to understand what you need help with. Audio is never stored.",
+          "speechRecognitionPermission": "Allow gentle_loop to convert your voice to text for AI guidance.",
+          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
