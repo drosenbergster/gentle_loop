@@ -11,7 +11,8 @@
         "simulator": false
       },
       "env": {
-        "EXPO_PUBLIC_API_PROXY_URL": "http://localhost:54321/functions/v1"
+        "EXPO_PUBLIC_API_PROXY_URL": "http://localhost:54321/functions/v1",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtZ2h1aGNpc2F6c3hzcXJybWVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2ODI2NTksImV4cCI6MjA4NjI1ODY1OX0.MAoI2mmcgtlWXYVsTuGw52BNXJfaRp0YznOGHG2i_sU"
       }
     },
     "development-simulator": {
@@ -21,19 +22,22 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_API_PROXY_URL": "http://localhost:54321/functions/v1"
+        "EXPO_PUBLIC_API_PROXY_URL": "http://localhost:54321/functions/v1",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtZ2h1aGNpc2F6c3hzcXJybWVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2ODI2NTksImV4cCI6MjA4NjI1ODY1OX0.MAoI2mmcgtlWXYVsTuGw52BNXJfaRp0YznOGHG2i_sU"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_PROXY_URL": "https://amghuhcisazsxsqrrmep.supabase.co/functions/v1"
+        "EXPO_PUBLIC_API_PROXY_URL": "https://amghuhcisazsxsqrrmep.supabase.co/functions/v1",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtZ2h1aGNpc2F6c3hzcXJybWVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2ODI2NTksImV4cCI6MjA4NjI1ODY1OX0.MAoI2mmcgtlWXYVsTuGw52BNXJfaRp0YznOGHG2i_sU"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_PROXY_URL": "https://amghuhcisazsxsqrrmep.supabase.co/functions/v1"
+        "EXPO_PUBLIC_API_PROXY_URL": "https://amghuhcisazsxsqrrmep.supabase.co/functions/v1",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtZ2h1aGNpc2F6c3hzcXJybWVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2ODI2NTksImV4cCI6MjA4NjI1ODY1OX0.MAoI2mmcgtlWXYVsTuGw52BNXJfaRp0YznOGHG2i_sU"
       }
     }
   },

@@ -18,10 +18,11 @@
 // Configuration
 // ─────────────────────────────────────────
 
-const API_URL =
-  'https://amghuhcisazsxsqrrmep.supabase.co/functions/v1/ai-suggest';
-const ANON_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtZ2h1aGNpc2F6c3hzcXJybWVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2ODI2NTksImV4cCI6MjA4NjI1ODY1OX0.MAoI2mmcgtlWXYVsTuGw52BNXJfaRp0YznOGHG2i_sU';
+const API_URL = process.env.EXPO_PUBLIC_API_PROXY_URL
+  ? `${process.env.EXPO_PUBLIC_API_PROXY_URL}/ai-suggest`
+  : (() => { throw new Error('EXPO_PUBLIC_API_PROXY_URL environment variable is required.'); })();
+const ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+  ?? (() => { throw new Error('EXPO_PUBLIC_SUPABASE_ANON_KEY environment variable is required.'); })();
 
 // ─────────────────────────────────────────
 // Types
