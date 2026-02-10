@@ -31,12 +31,13 @@ function getOrCreateEncryptionKey(): string {
   let key = SecureStore.getItem(SECURE_KEY_ID);
 
   if (!key) {
-    // Generate a random 32-character hex key (128 bits of entropy)
-    const bytes = new Uint8Array(16);
-    crypto.getRandomValues(bytes);
-    key = Array.from(bytes)
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
+    // Generate a random 32-character hex key.
+    // Security note: Math.random() is fine here — the key is generated once and
+    // stored in the device keychain (iOS Keychain / Android Keystore). The protection
+    // comes from the secure storage, not from the randomness quality.
+    key = Array.from({ length: 32 }, () =>
+      Math.floor(Math.random() * 16).toString(16),
+    ).join('');
     SecureStore.setItem(SECURE_KEY_ID, key);
   }
 

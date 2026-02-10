@@ -22,16 +22,22 @@ import type { ToolboxEntry } from '../types/toolbox';
 // Configuration
 // ─────────────────────────────────────────
 
-/** Supabase Edge Function URL — set via EAS build env */
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_PROXY_URL;
+/** Supabase Edge Function URL — from env; in dev (Metro) fallback so app runs without .env */
+const DEFAULT_DEV_API_URL = 'https://amghuhcisazsxsqrrmep.supabase.co/functions/v1';
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_PROXY_URL ??
+  (__DEV__ ? DEFAULT_DEV_API_URL : undefined);
 if (!API_BASE_URL) {
   throw new Error('EXPO_PUBLIC_API_PROXY_URL environment variable is required.');
 }
 
 const AI_SUGGEST_URL = `${API_BASE_URL}/ai-suggest`;
 
-/** Supabase anon key for auth header — set via EAS build env */
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+/** Supabase anon key — from env; in dev (Metro) fallback so app runs without .env */
+const DEFAULT_DEV_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtZ2h1aGNpc2F6c3hzcXJybWVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2ODI2NTksImV4cCI6MjA4NjI1ODY1OX0.MAoI2mmcgtlWXYVsTuGw52BNXJfaRp0YznOGHG2i_sU';
+const SUPABASE_ANON_KEY =
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? (__DEV__ ? DEFAULT_DEV_ANON_KEY : undefined);
 if (!SUPABASE_ANON_KEY) {
   throw new Error('EXPO_PUBLIC_SUPABASE_ANON_KEY environment variable is required.');
 }
