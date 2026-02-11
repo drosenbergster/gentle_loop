@@ -19,7 +19,7 @@ export interface Idea {
 export type IdeasByLevel = Record<EnergyLevel, Idea[]>;
 
 export const ideas: IdeasByLevel = {
-  // When You're Running Low (4 ideas)
+  // When You're Running Low (8 ideas — mix of pause-appropriate and action-appropriate)
   running_low: [
     {
       id: 'rl-1',
@@ -38,9 +38,9 @@ export const ideas: IdeasByLevel = {
     {
       id: 'rl-3',
       validation: "Your body is carrying stress. Let's help it release.",
-      title: 'Try this breath',
+      title: 'Cold water reset',
       content:
-        "In for 4. Out for 6. The longer exhale tells your body it's safe. Do it three times.",
+        'Run cold water over your wrists for 30 seconds. Hold an ice cube. The cold interrupts your stress response and brings you back.',
     },
     {
       id: 'rl-4',
@@ -49,9 +49,37 @@ export const ideas: IdeasByLevel = {
       content:
         'Coffee, a lotion you love, fresh air. Something that brings you back to yourself, even for a moment.',
     },
+    {
+      id: 'rl-5',
+      validation: "You're allowed to be angry about this. That anger means you care.",
+      title: 'Press and release',
+      content:
+        'Press your palms flat against a wall as hard as you can for 10 seconds, then release. Physical tension needs a physical outlet.',
+    },
+    {
+      id: 'rl-6',
+      validation: "You can't pour from empty. It's okay to do the minimum right now.",
+      title: 'Lower the bar',
+      content:
+        "What's the one thing that absolutely has to happen right now? Just that. Everything else can wait.",
+    },
+    {
+      id: 'rl-7',
+      validation: 'Grief shows up in unexpected moments. Let it.',
+      title: 'Name what you feel',
+      content:
+        '"I feel overwhelmed." "I feel sad." Naming the emotion out loud actually reduces its intensity. Science backs this up.',
+    },
+    {
+      id: 'rl-8',
+      validation: "Sometimes the situation needs you, even when you're empty. You can do this.",
+      title: 'One small thing, right now',
+      content:
+        'Offer them a drink. Turn on a familiar song. Sit next to them. You don\'t need energy for presence — just proximity.',
+    },
   ],
 
-  // When You're Holding Steady (6 ideas)
+  // When You're Holding Steady (8 ideas)
   holding_steady: [
     {
       id: 'hs-1',
@@ -95,9 +123,23 @@ export const ideas: IdeasByLevel = {
       content:
         "\"Are you cold?\" works. \"Do you want a sweater or blanket or should I turn up the heat?\" overwhelms.",
     },
+    {
+      id: 'hs-7',
+      validation: 'Their reality is real to them. That matters more than facts right now.',
+      title: 'Step into their world',
+      content:
+        'If they think it\'s 1985, ask about 1985. "What was happening back then?" Meet them where they are instead of pulling them to you.',
+    },
+    {
+      id: 'hs-8',
+      validation: 'Hands that are busy are minds that are calmer.',
+      title: 'Give them a job',
+      content:
+        'Folding towels, sorting buttons, wiping a counter. Procedural memory hangs on. Let them do it their way — the goal is engagement.',
+    },
   ],
 
-  // When You've Got This (6 ideas)
+  // When You've Got This (8 ideas)
   ive_got_this: [
     {
       id: 'ig-1',
@@ -140,6 +182,20 @@ export const ideas: IdeasByLevel = {
       title: 'Set up tomorrow tonight',
       content:
         "Lay out clothes. Prep breakfast. Small things now mean fewer decisions when you're tired.",
+    },
+    {
+      id: 'ig-7',
+      validation: "This is a good moment to invest in your future self's sanity.",
+      title: 'Safety-proof one room',
+      content:
+        'Grab bars near the toilet, non-slip mats in the tub, nightlights on the path to the bathroom. Small changes, big impact on hard nights.',
+    },
+    {
+      id: 'ig-8',
+      validation: 'You know this person. Trust what you know.',
+      title: 'Build their playlist',
+      content:
+        'Songs from their teens and twenties hit deepest. Musical memory outlasts almost everything else. A ready playlist is a tool you\'ll reach for often.',
     },
   ],
 };

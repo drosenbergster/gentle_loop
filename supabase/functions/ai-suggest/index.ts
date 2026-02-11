@@ -7,7 +7,7 @@
  * ARCH-10: System prompt stored as environment variable
  * ARCH-11: response_type metadata in every response
  * ARCH-12: Per-device rate limiting (soft cap)
- * FM-1:    Parses [SUGGESTION]/[PAUSE]/[QUESTION]/[OUT_OF_IDEAS] tags from LLM response
+ * FM-1:    Parses [SUGGESTION]/[PAUSE]/[CRISIS]/[QUESTION]/[OUT_OF_IDEAS] tags from LLM response
  * SQ-1:    Missing/malformed tag defaults to "suggestion" with warning log
  * FR40:    API key never exposed in responses
  * NFR10:   No credentials in error messages
@@ -24,7 +24,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 type EnergyLevel = "running_low" | "holding_steady" | "ive_got_this";
 type RequestType = "initial" | "another" | "follow_up" | "timer_follow_up";
-type ResponseType = "suggestion" | "pause" | "question" | "out_of_ideas";
+type ResponseType = "suggestion" | "pause" | "crisis" | "question" | "out_of_ideas";
 
 interface AIRequestPayload {
   energy_level: EnergyLevel;
@@ -51,7 +51,7 @@ interface ErrorResponse {
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_MODEL = "claude-3-5-haiku-20241022";
-const MAX_TOKENS = 120;
+const MAX_TOKENS = 180; // Increased from 120: crisis responses may use up to 60 words (~90 tokens)
 const TEMPERATURE = 0.7;
 
 // Rate limiting: soft cap per device (ARCH-12)
@@ -89,11 +89,12 @@ const VALID_REQUEST_TYPES: RequestType[] = [
 // Tag Parsing (FM-1, SQ-1)
 // ─────────────────────────────────────────
 
-const TAG_REGEX = /^\[(SUGGESTION|PAUSE|QUESTION|OUT_OF_IDEAS)\]\s*/i;
+const TAG_REGEX = /^\[(SUGGESTION|PAUSE|CRISIS|QUESTION|OUT_OF_IDEAS)\]\s*/i;
 
 const TAG_TO_RESPONSE_TYPE: Record<string, ResponseType> = {
   SUGGESTION: "suggestion",
   PAUSE: "pause",
+  CRISIS: "crisis",
   QUESTION: "question",
   OUT_OF_IDEAS: "out_of_ideas",
 };

@@ -17,11 +17,13 @@ export type RequestType = 'initial' | 'another' | 'follow_up' | 'timer_follow_up
 /**
  * Response type parsed from the LLM's structured tag by the proxy.
  * - suggestion: Standard practical suggestion
- * - pause: Breathing/timer-eligible suggestion (typically for running_low + initial)
+ * - pause: Breathing/timer-eligible suggestion (for running_low + manageable situation + initial)
+ * - crisis: Emergency detected — physical danger, medical emergency, caregiver self-harm/suicidal
+ *           ideation, panic attack, or fear of harming care recipient. App surfaces emergency resources.
  * - question: Pivot inquiry after ~3-4 declined suggestions
  * - out_of_ideas: No more novel suggestions available
  */
-export type ResponseType = 'suggestion' | 'pause' | 'question' | 'out_of_ideas';
+export type ResponseType = 'suggestion' | 'pause' | 'crisis' | 'question' | 'out_of_ideas';
 
 /** Payload sent to the ai-suggest Edge Function */
 export interface AIRequestPayload {
