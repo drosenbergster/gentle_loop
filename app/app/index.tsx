@@ -34,11 +34,13 @@ import {
 import { EncouragementBanner } from '../src/components/EncouragementBanner';
 import { IdeasOverlay } from '../src/components/IdeasOverlay';
 import { SuggestionCard } from '../src/components/SuggestionCard';
+import { CrisisBanner } from '../src/components/CrisisBanner';
 import { TextInputFallback } from '../src/components/TextInputFallback';
 import {
   pickEncouragement,
   ENCOURAGEMENT_THRESHOLD,
 } from '../src/data/encouragements';
+import { inferCrisisContext, type CrisisContext } from '../src/data/crisisResources';
 import { colors, spacing, fontFamilies } from '../src/theme';
 import {
   useEnergyLevel,
@@ -135,6 +137,11 @@ export default function AnchorScreen() {
   const [showTextInput, setShowTextInput] = useState(false);
   const [showBreathing, setShowBreathing] = useState(false);
 
+  // Crisis detection state
+  const [showCrisisBanner, setShowCrisisBanner] = useState(false);
+  const [crisisContext, setCrisisContext] = useState<CrisisContext | null>(null);
+  const [crisisAIMessage, setCrisisAIMessage] = useState<string | null>(null);
+
   // Story 5.1: "Still With You" encouragement
   const [showEncouragement, setShowEncouragement] = useState(false);
   const [encouragementMsg, setEncouragementMsg] = useState('');
@@ -148,6 +155,19 @@ export default function AnchorScreen() {
     async (message: string, requestType: RequestType) => {
       setIsProcessing(true);
       setShowCard(false);
+
+      // --- Client-side crisis pre-screening ---
+      // Check for crisis keywords BEFORE sending to AI. If detected,
+      // show crisis resources immediately while waiting for the AI response.
+      const detectedCrisis = requestType !== 'another'
+        ? inferCrisisContext(message)
+        : null;
+
+      if (detectedCrisis) {
+        setCrisisContext(detectedCrisis);
+        setCrisisAIMessage(null); // AI hasn't responded yet
+        setShowCrisisBanner(true);
+      }
 
       // Add caregiver turn to thread
       conversation.addCaregiverTurn(
@@ -171,35 +191,59 @@ export default function AnchorScreen() {
 
         setCurrentSuggestion(result);
 
-        // Story 5.1: Show encouragement banner if 2+ assistant turns without "That worked"
-        const turnCount = conversation.getTurnCount();
-        if (
-          turnCount >= ENCOURAGEMENT_THRESHOLD &&
-          result.responseType !== 'question' &&
-          result.responseType !== 'out_of_ideas'
-        ) {
-          const msg = pickEncouragement(lastEncouragementRef.current);
-          lastEncouragementRef.current = msg;
-          setEncouragementMsg(msg);
-          setShowEncouragement(true);
-        }
+        // --- Crisis response handling ---
+        if (result.responseType === 'crisis') {
+          // AI detected a crisis (may or may not match client-side pre-screening)
+          if (!detectedCrisis) {
+            // AI caught something pre-screening missed — use general context
+            setCrisisContext('general_crisis');
+          }
+          setCrisisAIMessage(result.text);
+          setShowCrisisBanner(true);
+          setShowCard(false); // Don't show regular card for crisis
 
-        setShowCard(true);
+          // TTS: read crisis response aloud
+          tts.speak(result.text);
+        } else if (detectedCrisis) {
+          // Pre-screening flagged it but AI didn't return crisis tag.
+          // Update the banner with the AI message anyway — the resources are already showing.
+          setCrisisAIMessage(result.text);
 
-        // TTS: read suggestion aloud (NFR4 — within 1s of card appearing)
-        tts.speak(result.text);
+          // Also show the regular card underneath (user can dismiss banner)
+          setShowCard(true);
+          tts.speak(result.text);
+        } else {
+          // Normal (non-crisis) response flow
+          // Story 5.1: Show encouragement banner if 2+ assistant turns without "That worked"
+          const turnCount = conversation.getTurnCount();
+          if (
+            turnCount >= ENCOURAGEMENT_THRESHOLD &&
+            result.responseType !== 'question' &&
+            result.responseType !== 'out_of_ideas'
+          ) {
+            const msg = pickEncouragement(lastEncouragementRef.current);
+            lastEncouragementRef.current = msg;
+            setEncouragementMsg(msg);
+            setShowEncouragement(true);
+          }
 
-        // Epic 3: If response_type is "pause" and energy is running_low,
-        // start breathing timer after showing the card briefly
-        if (
-          result.responseType === 'pause' &&
-          energyLevel === 'running_low' &&
-          requestType !== 'timer_follow_up'
-        ) {
-          // Show the card with the pause suggestion, then start breathing
-          setTimeout(() => {
-            setShowBreathing(true);
-          }, 2000); // Show card for 2s so they can read the suggestion
+          setShowCard(true);
+
+          // TTS: read suggestion aloud (NFR4 — within 1s of card appearing)
+          tts.speak(result.text);
+
+          // Epic 3: If response_type is "pause" and energy is running_low,
+          // start breathing timer after showing the card briefly
+          if (
+            result.responseType === 'pause' &&
+            energyLevel === 'running_low' &&
+            requestType !== 'timer_follow_up'
+          ) {
+            // Show the card with the pause suggestion, then start breathing
+            setTimeout(() => {
+              setShowBreathing(true);
+            }, 2000); // Show card for 2s so they can read the suggestion
+          }
         }
       } catch (err) {
         const errorMessage =
@@ -354,6 +398,14 @@ export default function AnchorScreen() {
     }, durationMs);
   }, []);
 
+  // --- Crisis banner dismiss ---
+  const handleCrisisDismiss = useCallback(() => {
+    setShowCrisisBanner(false);
+    setCrisisContext(null);
+    setCrisisAIMessage(null);
+    // Don't clear the conversation — they may want to continue
+  }, []);
+
   const handleThatWorked = useCallback(() => {
     tts.stop();
     if (currentSuggestion) {
@@ -361,6 +413,9 @@ export default function AnchorScreen() {
       showToast('Saved to your Toolbox');
     }
     setShowCard(false);
+    setShowCrisisBanner(false);
+    setCrisisContext(null);
+    setCrisisAIMessage(null);
     setShowEncouragement(false);
     setCurrentSuggestion(null);
     lastEncouragementRef.current = null;
@@ -371,6 +426,9 @@ export default function AnchorScreen() {
     tts.stop();
     cancelBreathing();
     setShowCard(false);
+    setShowCrisisBanner(false);
+    setCrisisContext(null);
+    setCrisisAIMessage(null);
     setShowEncouragement(false);
     setCurrentSuggestion(null);
     lastEncouragementRef.current = null;
@@ -613,6 +671,15 @@ export default function AnchorScreen() {
           isRecording={isRecording}
         />
       )}
+
+      {/* Crisis Banner — shown for crisis responses or client-side pre-screening */}
+      <CrisisBanner
+        aiMessage={crisisAIMessage}
+        crisisContext={crisisContext}
+        visible={showCrisisBanner}
+        reduceMotion={reduceMotion}
+        onDismiss={handleCrisisDismiss}
+      />
 
       {/* Text Input Fallback (Story 1.10) */}
       <TextInputFallback

@@ -136,7 +136,7 @@ export function inferCrisisContext(message: string): CrisisContext | null {
     /\bweapon\b/,
     /\bknife\b/,
     /\bbleed(ing)?\b/,
-    /\bblood\b/,
+    /\bblood\b(?!\s+(pressure|sugar|test|work|draw))/,
   ];
 
   // Medical emergency keywords
@@ -181,12 +181,14 @@ export function inferCrisisContext(message: string): CrisisContext | null {
   ];
 
   // Panic attack keywords
+  // Note: patterns use [\w\s']* to allow intervening words (e.g., "chest is so tight", "heart won't stop racing")
   const panicPatterns = [
     /\bpanic\s+attack\b/,
     /\bhaving\s+a\s+panic\b/,
     /\bcan'?t\s+breathe?\b/,
-    /\bchest\s+(tight|pain|pressure|hurts?)\b/,
-    /\bheart\s+(racing|pounding|beating\s+(fast|hard))\b/,
+    /\bchest[\w\s']*\b(tight|pain|pressure|hurts?)\b/,
+    /\bheart[\w\s']*\b(racing|pounding)\b/,
+    /\bheart[\w\s']*\bbeating\s+(fast|hard)\b/,
     /\bshaking\s+(all\s+over|uncontrollabl)/,
     /\bfeel(s?|ing)\s+like\s+(i'?m\s+)?(dying|going\s+crazy|losing\s+(control|my\s+mind))\b/,
     /\bcan'?t\s+stop\s+(shaking|trembling|crying)\b/,
