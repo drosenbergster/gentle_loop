@@ -4,7 +4,7 @@
  * Secure proxy between gentle_loop mobile app and Anthropic Claude API.
  *
  * ARCH-9:  Structured context payload (energy, request_type, toolbox, history, message)
- * ARCH-10: System prompt stored as environment variable
+ * ARCH-10: System prompt bundled as system-prompt.ts (was env var, moved due to size limits)
  * ARCH-11: response_type metadata in every response
  * ARCH-12: Per-device rate limiting (soft cap)
  * FM-1:    Parses [SUGGESTION]/[PAUSE]/[CRISIS]/[QUESTION]/[OUT_OF_IDEAS] tags from LLM response
@@ -17,6 +17,7 @@
  */
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { SYSTEM_PROMPT } from "./system-prompt.ts";
 
 // ─────────────────────────────────────────
 // Types
@@ -406,7 +407,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // --- Environment check ---
   const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-  const SYSTEM_PROMPT = Deno.env.get("GENTLE_LOOP_SYSTEM_PROMPT");
 
   if (!ANTHROPIC_API_KEY) {
     console.error("[ai-suggest] ANTHROPIC_API_KEY not configured.");
@@ -417,14 +417,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     );
   }
 
-  if (!SYSTEM_PROMPT) {
-    console.error("[ai-suggest] GENTLE_LOOP_SYSTEM_PROMPT not configured.");
-    return errorResponse(
-      "The AI service is temporarily unavailable. Please try again later.",
-      "SERVICE_UNAVAILABLE",
-      503,
-    );
-  }
+  // System prompt is bundled with the function (imported from system-prompt.ts)
+  // No env var needed — avoids Supabase dashboard secret size limits.
 
   // --- Parse request body ---
   let body: unknown;
