@@ -16,6 +16,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
+  ScrollView,
   StyleSheet,
   Pressable,
   Platform,
@@ -154,6 +155,7 @@ export function SuggestionCard({
 
   const panGesture = Gesture.Pan()
     .activeOffsetX(ANDROID_BACK_GESTURE_ZONE) // FM-5: don't activate in Android back zone
+    .failOffsetY([-10, 10]) // Don't hijack vertical scroll in the text area
     .onUpdate((event) => {
       // Only allow rightward swipe (positive translationX)
       if (event.translationX > 0) {
@@ -258,19 +260,26 @@ export function SuggestionCard({
               {/* Drag indicator */}
               <View style={styles.dragIndicator} />
 
-              {/* Suggestion text */}
-              <Text
-                style={[
-                  styles.suggestionText,
-                  {
-                    fontSize: scale(18),
-                    lineHeight: scale(27),
-                    color: textColor('textPrimary'),
-                  },
-                ]}
+              {/* Suggestion text — scrollable when content exceeds available space */}
+              <ScrollView
+                style={styles.textScroll}
+                contentContainerStyle={styles.textScrollContent}
+                showsVerticalScrollIndicator={true}
+                bounces={false}
               >
-                {suggestion}
-              </Text>
+                <Text
+                  style={[
+                    styles.suggestionText,
+                    {
+                      fontSize: scale(18),
+                      lineHeight: scale(27),
+                      color: textColor('textPrimary'),
+                    },
+                  ]}
+                >
+                  {suggestion}
+                </Text>
+              </ScrollView>
 
               {/* Story 5.2: Pivot question card — mic is primary, hide That Worked/Another */}
               {isPivotQuestion ? (
@@ -413,6 +422,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: 12,
     paddingBottom: spacing.lg,
+    flexDirection: 'column',
     ...createShadow(-4, 20, 0.15),
   },
   dragIndicator: {
@@ -423,12 +433,17 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: spacing.lg,
   },
+  textScroll: {
+    flexShrink: 1,
+  },
+  textScrollContent: {
+    paddingBottom: spacing.sm,
+  },
   suggestionText: {
     fontFamily: fontFamilies.regular,
     fontSize: 18,
     lineHeight: 27,
     color: colors.textPrimary,
-    marginBottom: spacing.lg,
   },
 
   // --- That Worked (primary) ---

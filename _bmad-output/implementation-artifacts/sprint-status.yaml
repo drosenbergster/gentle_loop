@@ -1,4 +1,5 @@
 # generated: 2026-02-09
+# updated: 2026-02-26
 # project: gentle_loop
 # project_key: NOKEY
 # tracking_system: file-system
@@ -52,48 +53,57 @@ story_location: _bmad-output/implementation-artifacts/stories
 development_status:
   # Epic 1: Core Experience — Anchor Screen, AI Guided Support & Offline Fallback
   # Group A — Foundation
-  epic-1: in-progress
-  1-1-stt-provider-evaluation-spike: review
-  1-2-project-setup-core-infrastructure: review
-  1-3-anchor-screen-image-affirmation-mic-button-ui: review
-  1-4-settings-screen: review
-  1-5-offline-detection-curated-gentle-ideas: review
+  epic-1: done
+  1-1-stt-provider-evaluation-spike: done         # On-device STT recommended; pending real device validation
+  1-2-project-setup-core-infrastructure: done
+  1-3-anchor-screen-image-affirmation-mic-button-ui: done
+  1-4-settings-screen: done
+  1-5-offline-detection-curated-gentle-ideas: done
   # Group B — Voice + AI Pipeline
-  1-6-api-proxy-deployment-supabase-edge-function: review
-  1-7-voice-recording-transcription: review
-  1-8-ai-service-client-suggestion-card: review
+  1-6-api-proxy-deployment-supabase-edge-function: done
+  1-7-voice-recording-transcription: done
+  1-8-ai-service-client-suggestion-card: done
   # Group C — Polish & Integration
-  1-9-text-to-speech-playback: review
-  1-10-text-input-fallback: review
-  1-11-swipe-to-dismiss-card-transitions: review
-  1-12-ai-generated-content-label-response-mode-wiring: review
-  1-13-prompt-quality-validation-latency-testing: review
+  1-9-text-to-speech-playback: done                # TTS wired but quality not production-ready; see story 6.1
+  1-10-text-input-fallback: done
+  1-11-swipe-to-dismiss-card-transitions: done
+  1-12-ai-generated-content-label-response-mode-wiring: done
+  1-13-prompt-quality-validation-latency-testing: done
   epic-1-retrospective: optional
 
   # Epic 2: Onboarding & First-Time Setup
-  epic-2: review
-  2-1-onboarding-flow-welcome-how-it-works-your-name: review
-  2-2-onboarding-flow-your-anchor-meet-the-mic: review
-  2-3-wellness-disclaimer-first-launch-gate: review
+  epic-2: done
+  2-1-onboarding-flow-welcome-how-it-works-your-name: done
+  2-2-onboarding-flow-your-anchor-meet-the-mic: done
+  2-3-wellness-disclaimer-first-launch-gate: done
   epic-2-retrospective: optional
 
   # Epic 3: Energy-Aware Routing & Timer Flow
-  epic-3: review
-  3-1-running-low-ai-routing-permission-breathing-suggestion: review
-  3-2-breathing-timer-with-auto-follow-up: review
-  3-3-active-engagement-override: review
+  epic-3: done
+  3-1-running-low-ai-routing-permission-breathing-suggestion: done
+  3-2-breathing-timer-with-auto-follow-up: done
+  3-3-active-engagement-override: done
   epic-3-retrospective: optional
 
   # Epic 4: Toolbox — Personal Strategy Playbook UI
-  epic-4: review
-  4-1-toolbox-full-view-browse-all-saved-strategies: review
-  4-2-toolbox-entry-management-delete-strategies: review
-  4-3-toolbox-integration-testing-ai-behavior-validation: review
+  epic-4: done
+  4-1-toolbox-full-view-browse-all-saved-strategies: done
+  4-2-toolbox-entry-management-delete-strategies: done
+  4-3-toolbox-integration-testing-ai-behavior-validation: done
   epic-4-retrospective: optional
 
   # Epic 5: Smart Conversation Behaviors
-  epic-5: review
-  5-1-still-with-you-encouragement-messages: review
-  5-2-conversation-pivot-ai-asks-a-question: review
-  5-3-out-of-ideas-graceful-endpoint: review
+  epic-5: done
+  5-1-still-with-you-encouragement-messages: done
+  5-2-conversation-pivot-ai-asks-a-question: done
+  5-3-out-of-ideas-graceful-endpoint: done
   epic-5-retrospective: optional
+
+  # ─── Open items / follow-up work ───
+  # Epic 6: Post-MVP Polish & Stabilization
+  epic-6: in-progress
+  6-1-tts-stabilization: ready-for-dev             # TTS not production-ready; needs real device testing and quality pass
+  # Backlog:
+  # - Real device STT validation (Story 1.1 follow-up)
+  # - AI feedback refinement (more specific responses, crisis tiers)
+  # - SuggestionCard scrollable text fix (uncommitted)

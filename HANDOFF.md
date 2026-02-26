@@ -1,7 +1,9 @@
 # Gentle Loop - Development Handoff
 
+> **Note:** This document is from early development (Feb 5, 2026) and reflects the state before the full MVP was built. For current project status, see [README.md](README.md) and [sprint-status.yaml](_bmad-output/implementation-artifacts/sprint-status.yaml). For the post-MVP handoff, see [implementation-handoff.md](_bmad-output/planning-artifacts/implementation-handoff.md).
+
 **Date:** February 5, 2026  
-**Status:** MVP Anchor Screen Complete  
+**Status:** Superseded — MVP Complete as of Feb 10, 2026  
 **Repository:** https://github.com/drosenbergster/gentle_loop
 
 ---
