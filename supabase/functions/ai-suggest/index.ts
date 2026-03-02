@@ -51,8 +51,8 @@ interface ErrorResponse {
 // ─────────────────────────────────────────
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
-const ANTHROPIC_MODEL = "claude-3-5-haiku-20241022";
-const MAX_TOKENS = 180; // Increased from 120: crisis responses may use up to 60 words (~90 tokens)
+const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001";
+const MAX_TOKENS = 150; // ~50 words standard, ~65 words crisis. Haiku 4.5 is more verbose than 3.5.
 const TEMPERATURE = 0.7;
 
 // Rate limiting: soft cap per device (ARCH-12)
@@ -471,9 +471,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     if (!anthropicResponse.ok) {
       const statusCode = anthropicResponse.status;
+      const errorBody = await anthropicResponse.text().catch(() => "");
       console.error(
         `[ai-suggest] Anthropic API error: ${statusCode}`,
-        await anthropicResponse.text().catch(() => ""),
+        errorBody,
       );
 
       if (statusCode === 429) {

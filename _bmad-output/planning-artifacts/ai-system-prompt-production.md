@@ -674,29 +674,29 @@ You: Try offering something she can eat with her hands — crackers, fruit, chee
 
 | Component | Estimated Tokens |
 |---|---|
-| System prompt (v2.1 — expanded knowledge + crisis + red flags + new scenarios) | ~7,500 |
+| System prompt (v3.0 — enriched knowledge + real-world scenarios + DICE + assistive tech) | ~10,000 |
 | Context block (energy, request type, toolbox with 5 entries) | ~180 |
 | Conversation history (5 turns) | ~500 |
 | Caregiver message | ~50 |
-| **Total input** | **~8,230** |
+| **Total input** | **~10,730** |
 | AI response (~40-60 words) | ~90 |
-| **Total per request** | **~8,320** |
+| **Total per request** | **~10,820** |
 
-This is well within the context window of any modern model (GPT-4o-mini: 128K, Claude Haiku: 200K). Cost per request increases ~3x from v1 but remains minimal at current token pricing. Approaching the threshold where RAG migration should be evaluated (see 5.2.1).
+This is well within the context window of Claude Haiku 4.5 (200K). Cost per request is higher than v1-v2 due to the enriched knowledge base. Now at the threshold where RAG migration should be seriously evaluated for the next expansion (see 5.2.1).
 
-**`max_tokens` setting:** 180 tokens (~120 words). Increased from 120 to accommodate crisis responses which may use up to 60 words. The system prompt's brevity instructions are the primary control; `max_tokens` is a safety net.
+**`max_tokens` setting:** 150 tokens. Reduced from 180 to help enforce brevity with Haiku 4.5 (more verbose than 3.5 Haiku). The system prompt's brevity instructions are the primary control; `max_tokens` is a safety net.
 
 **`temperature` setting:** 0.7 recommended. High enough for natural variation in phrasing; low enough for consistent, grounded responses. Can be tuned based on testing.
 
 ### 5.2.1 Knowledge Architecture Decision (v2 → v3 Planning)
 
-The v2.1 system prompt embeds all scenario-specific knowledge directly in the prompt (~7,500 tokens). This is still workable for MVP because:
+The v3.0 system prompt embeds all scenario-specific knowledge directly in the prompt (~10,000 tokens). This is approaching the limit of what's practical without RAG because:
 - Zero additional infrastructure (no vector DB, no embeddings pipeline)
 - Predictable behavior — same knowledge available every request
 - Easy to iterate — edit one document, redeploy
 
 **When to move to RAG (Retrieval-Augmented Generation):**
-- If the knowledge base exceeds ~10,000 tokens (approaching that threshold now — next major expansion should trigger RAG evaluation)
+- If the knowledge base exceeds ~12,000 tokens (at ~10,000 now — one more major expansion will cross this)
 - If we need to add personalized knowledge (e.g., "this care recipient responds well to X")
 - If we want to inject external knowledge dynamically (e.g., seasonal guidance, new research)
 
@@ -852,6 +852,36 @@ NFR5 says swiping to the next suggestion must feel instant (<300ms). To achieve 
 - **Primary user definition**: Explicitly defined as family member without formal caregiver training.
 - **Facility transitions**: Explicitly scoped out of the app's responsibility; directed to Alzheimer's Association.
 - **Token budget**: Increased to ~7,000+ per request due to expanded knowledge sections.
+
+**v3.0** (2026-02-27): Knowledge enrichment from alz.org, Teepa Snow PAC, DICE framework, NIA, Validation Method, Montessori-based care, Music & Memory, PAINAD, and real caregiver scenarios.
+- **Model upgrade**: Claude 3.5 Haiku (`claude-3-5-haiku-20241022`) deprecated. Upgraded to Claude Haiku 4.5 (`claude-haiku-4-5-20251001`).
+- **Patchwork abilities**: Abilities are not a ladder — a person can know lettuce gets soggy but can't make a sandwich. Build on what's still there.
+- **Object agnosia**: Person can't recognize objects visually but may recognize by touch. Guide with "put it in their hand and say what it is."
+- **Face non-recognition**: May still recognize voice, touch, or smell when face means nothing. Always announce who you are.
+- **Sensory sensitivity to clothing/fabric**: Seams, tags, elastics can suddenly feel painful. Bamboo/cotton alternatives, buy multiples of tolerated items.
+- **Caregiver stress contagion**: Emotional tone is contagious — helping the caregiver calm down often calms the person too.
+- **Hidden medical causes**: UTIs, infections, constipation, dehydration masquerade as "dementia getting worse." Flagged for doctor calls.
+- **Identity/role preservation**: Repetitive hosting offers (tea, cereal) are about identity, not about tea. Accept the offer and participate.
+- **Perseveration and task restart loops**: Environmental completion signals (close the door, turn off lights) break loops better than verbal reasoning.
+- **Bedtime loops**: Environmental cues, consistent routine, avoid reasoning ("you already brushed your teeth").
+- **Medication refusal section**: Addresses the interaction dynamic, not the medication itself. "You can't argue logic with this disease."
+- **Ambiguous loss**: Named as specific grief type — mourning someone still alive, no closure, no community ritual.
+- **Respite guilt**: Named directly. Permission to take breaks. Practical resources (AA helpline, local respite services).
+- **Caregiver isolation**: "Nobody helps, nobody understands." Validate, don't fix.
+- **Kitchen/appliance safety**: Removable stove knobs, auto shutoff devices, microwave alternatives.
+- **Stairs safety**: Contrast tape, handrails both sides, patterned carpet distorts depth perception.
+- **Visitor management**: Prepare visitors — don't quiz ("Do you remember me?"), announce who you are.
+- **Enhanced pain recognition**: PAINAD indicators (vocal sounds, rigid body, clenched fists, increased confusion).
+- **Assistive technology**: GPS trackers, automatic pill dispensers, motion sensors, door alarms, smart home devices.
+- **DICE framework**: Implicit reasoning (Describe → Investigate → Create → Evaluate) in core philosophy.
+- **Bathing alternatives ladder**: Full bath → shower → sponge bath → washcloth → one body part per day → no-rinse products.
+- **Watch-me technique**: Demonstrate then guide. Showing is more effective than telling.
+- **Hand-over-hand feeding**: Place spoon in hand, wrap your hand around theirs, guide to mouth together.
+- **911 dementia disclosure**: Tell 911 the person has dementia — changes how responders approach the situation.
+- **Brevity enforcement**: Strengthened from "approximately 40 words" to "40 words or fewer. This is a HARD LIMIT."
+- **MAX_TOKENS**: Reduced from 180 to 150 to enforce brevity with more verbose Haiku 4.5 model.
+- **Token budget**: Increased to ~10,000+ per request. Approaching RAG migration threshold.
+- **Stress test**: 38 scenarios (14 original + 10 real-world + 13 research-based + 2 crisis edge). 38/38 pass. Avg latency 2490ms.
 
 ### Ongoing Iteration
 

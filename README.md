@@ -42,7 +42,7 @@ See `app/.env.example` for reference.
 | UI | React Native Paper + custom theme |
 | Animations | React Native Reanimated |
 | Voice | expo-speech-recognition (on-device STT) |
-| AI Backend | Supabase Edge Function → Anthropic Claude 3.5 Haiku |
+| AI Backend | Supabase Edge Function → Anthropic Claude Haiku 4.5 |
 
 ## Project Structure
 
@@ -86,8 +86,7 @@ gentle_loop/
 
 - TTS playback needs stabilization (wired but not production-ready)
 - On-device STT recommendation pending real device validation
-- AI feedback quality improvements in progress (more specific responses, crisis escalation tiers)
-- SuggestionCard scrollable text fix (in progress)
+- Real device end-to-end testing (STT, TTS, AI response timing, crisis banner)
 
 ## Design
 

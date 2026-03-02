@@ -42,7 +42,7 @@ gentle_loop is a React Native mobile app designed for dementia caregivers. The a
 | Layer | Technology | Rationale |
 |-------|------------|-----------|
 | **Speech-to-Text** | On-device (Apple Speech / Google Speech) or Whisper API | Low latency; evaluate both during development |
-| **LLM API** | OpenAI (GPT-4o-mini) or Anthropic (Claude 3.5 Haiku) | Cost-effective, strong instruction-following, fast |
+| **LLM API** | Anthropic Claude Haiku 4.5 (`claude-haiku-4-5-20251001`) | Cost-effective, strong instruction-following, fast |
 | **Text-to-Speech** | expo-speech (on-device TTS) | Read AI responses aloud; configurable in Settings |
 | **API Proxy** | Supabase Edge Function (or similar) | Secures API key server-side; client never holds key |
 | **Audio Recording** | expo-av | Hold-to-talk recording, 60-second max |

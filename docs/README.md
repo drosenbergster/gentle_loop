@@ -23,7 +23,7 @@ Detailed planning docs live in [`_bmad-output/planning-artifacts/`](../_bmad-out
 | `ux-design-specification.md` | Interaction states, visual design, accessibility |
 | `wireframes-specification.md` | ASCII wireframes for all screens |
 | `ai-system-prompt-spec.md` | AI behavior spec, knowledge base taxonomy, safety guardrails |
-| `ai-system-prompt-production.md` | Production system prompt (v2.1) with technical notes |
+| `ai-system-prompt-production.md` | Production system prompt (v3.0) with technical notes |
 | `content-final.md` | Affirmations, curated ideas, onboarding copy |
 
 ## Implementation Artifacts

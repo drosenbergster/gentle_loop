@@ -1,5 +1,5 @@
 # generated: 2026-02-09
-# updated: 2026-02-26
+# updated: 2026-02-27
 # project: gentle_loop
 # project_key: NOKEY
 # tracking_system: file-system
@@ -103,7 +103,9 @@ development_status:
   # Epic 6: Post-MVP Polish & Stabilization
   epic-6: in-progress
   6-1-tts-stabilization: ready-for-dev             # TTS not production-ready; needs real device testing and quality pass
+  6-2-ai-quality-improvement: done                 # v3.0 prompt enrichment, model upgrade (Haiku 4.5), 38-scenario stress test
   # Backlog:
+  # - Real device end-to-end testing (STT, TTS, AI timing, crisis banner)
   # - Real device STT validation (Story 1.1 follow-up)
-  # - AI feedback refinement (more specific responses, crisis tiers)
-  # - SuggestionCard scrollable text fix (uncommitted)
+  # - SuggestionCard scrollable text fix (committed)
+  # - Brevity tuning: 26% of responses still exceed 65-word target (model verbose on complex scenarios)
